@@ -23,10 +23,10 @@ model Usuarios {
   fotoPerfil String?
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
-  lojas Lojas[]
+  lojas Loja[]
 }
 
-model Lojas {
+model Loja {
   id Int @id @default(autoincrement())
   usuarioId Int
   categoriaId Int
@@ -37,15 +37,16 @@ model Lojas {
   sticker String?
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
+  produtos Produto []
   usuario Usuarios @relation(fields: [usuarioId], references: [id], onDelete: Cascade, onUpdate: Cascade)
-  categoria Categorias @relation(fields: [categoriaId], references: [id], onDelete: Cascade, onUpdate: Cascade)
+  categoria Categoria @relation(fields: [categoriaId], references: [id], onDelete: Cascade, onUpdate: Cascade)
 }
 
-model Categorias {
+model Categoria {
   id Int @id @default(autoincrement())
   nome CategoriasNome @unique
-  lojas Lojas[]
-  subcategorias Subcategorias []
+  lojas Loja[]
+  subcategorias Subcategoria []
 }
 
 enum CategoriasNome{
@@ -59,11 +60,25 @@ enum CategoriasNome{
   CASA
 }
 
-model Subcategorias{
+model Subcategoria {
   id Int @id @default(autoincrement())
   nome String @db.VarChar(100)
   categoriaId Int
-  categoria Categorias @relation(fields: [categoriaId], references: [id], onDelete: Cascade, onUpdate: Cascade)
+  produtos Produto []
+  categoria Categoria @relation(fields: [categoriaId], references: [id], onDelete: Cascade, onUpdate: Cascade)
   @@unique([nome, categoriaId])
 }
 
+model Produto {
+  id Int @id @default(autoincrement())
+  lojaId Int
+  subcategoriaId Int
+  nome String @db.VarChar(255)
+  descricao String @db.Text
+  preco Decimal @db.Decimal(10, 2)
+  estoque Int
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  loja Loja @relation(fields: [lojaId], references: [id], onDelete: Cascade, onUpdate: Cascade)
+  subcategoria Subcategoria @relation(fields: [subcategoriaId], references: [id], onDelete: Cascade, onUpdate: Cascade)
+}
