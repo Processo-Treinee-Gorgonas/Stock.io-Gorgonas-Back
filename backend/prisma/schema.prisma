@@ -13,3 +13,14 @@ datasource db {
   provider = "postgresql"
   url      = env("DATABASE_URL")
 }
+
+model Usuarios {
+  id Int @id @default(autoincrement())
+  userName String @db.VarChar(50) @unique
+  nome String @db.VarChar(255)
+  email String @db.VarChar(255) @unique
+  senhaHash String @db.VarChar(255)
+  fotoPerfil String?
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
