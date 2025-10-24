@@ -14,7 +14,7 @@ datasource db {
   url      = env("DATABASE_URL")
 }
 
-model Usuarios {
+model Usuario {
   id Int @id @default(autoincrement())
   userName String @db.VarChar(50) @unique
   nome String @db.VarChar(255)
@@ -24,6 +24,8 @@ model Usuarios {
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
   lojas Loja[]
+  avaliacoesLoja AvaliacaoLoja[]
+  comentariosAvaliacaoLoja ComentarioAvaliacaoLoja []
 }
 
 model Loja {
@@ -38,7 +40,8 @@ model Loja {
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
   produtos Produto []
-  usuario Usuarios @relation(fields: [usuarioId], references: [id], onDelete: Cascade, onUpdate: Cascade)
+  avaliacoes AvaliacaoLoja []
+  usuario Usuario @relation(fields: [usuarioId], references: [id], onDelete: Cascade, onUpdate: Cascade)
   categoria Categoria @relation(fields: [categoriaId], references: [id], onDelete: Cascade, onUpdate: Cascade)
 }
 
@@ -91,4 +94,29 @@ model ImagemProduto {
   ordem Int
   produto Produto @relation(fields: [produtoId], references: [id], onDelete: Cascade, onUpdate: Cascade)
   @@unique([ordem, produtoId])
+}
+
+model AvaliacaoLoja {
+  id Int @id @default(autoincrement())
+  usuarioId Int
+  lojaId Int
+  nota Int
+  conteudo String @db.Text
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  comentario ComentarioAvaliacaoLoja []
+  usuario Usuario @relation(fields: [usuarioId], references: [id], onDelete: Cascade, onUpdate: Cascade)
+  loja Loja @relation(fields: [lojaId], references: [id], onDelete: Cascade, onUpdate: Cascade)
+  @@unique([usuarioId, lojaId])
+}
+
+model ComentarioAvaliacaoLoja {
+  id Int @id @default(autoincrement())
+  usuarioId Int
+  avaliacaoLojaId Int
+  conteudo String @db.Text
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  usuario Usuario @relation(fields: [usuarioId], references: [id], onDelete: Cascade, onUpdate: Cascade)
+  avaliacaoLoja AvaliacaoLoja @relation(fields: [avaliacaoLojaId], references: [id], onDelete: Cascade, onUpdate: Cascade)
 }
