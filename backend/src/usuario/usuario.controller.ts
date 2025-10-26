@@ -33,4 +33,11 @@ export class UsuarioController {
         return this.usuarioService.findOne(id);
     }
 
+    @Delete(':id')
+    delete(
+        @Param('id', ParseIntPipe) id: number
+    ) {
+        return this.usuarioService.delete(id);
+    }
+
 }

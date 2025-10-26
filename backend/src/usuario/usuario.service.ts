@@ -104,4 +104,19 @@ export class UsuarioService {
         delete (usuario as any).senhaHash;
         return usuario;
     }
+
+    async delete(id: number) {
+        
+        const usuarioExistente = await this.prisma.usuario.findUnique({
+            where: { id: id },
+        });
+        
+        if (!usuarioExistente) {
+            throw new NotFoundException('Usuário não encontrado.');
+        }
+        
+        await this.prisma.usuario.delete({
+            where: { id: id },
+        });
+    }
 }
