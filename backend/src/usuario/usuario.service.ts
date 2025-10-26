@@ -81,4 +81,14 @@ export class UsuarioService {
         delete (usuarioAtualizado as any).senhaHash;
         return usuarioAtualizado;
     }
+
+    async findAll() {
+        const usuarios = await this.prisma.usuario.findMany();
+        
+        usuarios.forEach(usuario => {
+            delete (usuario as any).senhaHash;
+        });
+        
+        return usuarios;
+    }
 }

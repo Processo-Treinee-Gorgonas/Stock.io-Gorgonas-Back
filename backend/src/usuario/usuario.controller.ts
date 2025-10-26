@@ -21,4 +21,9 @@ export class UsuarioController {
         return this.usuarioService.update(id, data);
     }
 
+    @Get()
+    findAll() {
+        return this.usuarioService.findAll();
+    }
+
 }
