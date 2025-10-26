@@ -91,4 +91,17 @@ export class UsuarioService {
         
         return usuarios;
     }
+
+    async findOne(id: number) {
+        const usuario = await this.prisma.usuario.findUnique({
+            where: { id: id },
+        });
+
+        if (!usuario) {
+            throw new NotFoundException('Usuário não encontrado.');
+        }
+
+        delete (usuario as any).senhaHash;
+        return usuario;
+    }
 }
