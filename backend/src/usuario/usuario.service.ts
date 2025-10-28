@@ -2,6 +2,7 @@ import { Injectable, BadRequestException, ConflictException, NotFoundException }
 import { CreateUsuarioDto } from './dto/create-usuario.dto';
 import { UpdateUsuarioDto } from './dto/update-usuario.dto';
 import { PrismaService } from '../database/prisma.service';
+import { Usuario } from '../../generated/prisma';
 import * as bcrypt from 'bcrypt';
 
 @Injectable()
@@ -84,11 +85,11 @@ export class UsuarioService {
 
     async findAll() {
         const usuarios = await this.prisma.usuario.findMany();
-        
+
         usuarios.forEach(usuario => {
             delete (usuario as any).senhaHash;
         });
-        
+
         return usuarios;
     }
 
@@ -104,17 +105,23 @@ export class UsuarioService {
         delete (usuario as any).senhaHash;
         return usuario;
     }
-
+    async findOneByEmail(email: string): Promise<Usuario | null> {
+        return this.prisma.usuario.findUnique({
+        where: {
+            email: email,
+        },
+        });
+    }
     async delete(id: number) {
-        
+
         const usuarioExistente = await this.prisma.usuario.findUnique({
             where: { id: id },
         });
-        
+
         if (!usuarioExistente) {
             throw new NotFoundException('Usuário não encontrado.');
         }
-        
+
         await this.prisma.usuario.delete({
             where: { id: id },
         });
