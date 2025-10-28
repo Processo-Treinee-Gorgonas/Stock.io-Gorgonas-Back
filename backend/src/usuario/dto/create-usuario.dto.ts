@@ -5,15 +5,15 @@ export class CreateUsuarioDto {
     @IsString()
     @IsNotEmpty()
     userName: string;
-    
+
     @IsString()
     @IsNotEmpty()
     nome: string;
-    
+
     @IsEmail()
     @IsNotEmpty()
     email: string;
-    
+
     @IsString()
     @IsNotEmpty()
     @MinLength(8)
@@ -23,7 +23,7 @@ export class CreateUsuarioDto {
     @IsString()
     @IsNotEmpty()
     confirmarSenha: string;
-    
+
     @IsString()
     @IsOptional()
     fotoPerfil?: string;
