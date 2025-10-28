@@ -13,3 +13,138 @@ datasource db {
   provider = "postgresql"
   url      = env("DATABASE_URL")
 }
+
+model Usuario {
+  id Int @id @default(autoincrement())
+  userName String @db.VarChar(50) @unique
+  nome String @db.VarChar(255)
+  email String @db.VarChar(255) @unique
+  senhaHash String @db.VarChar(255)
+  fotoPerfil String?
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  lojas Loja[]
+  avaliacoesLoja AvaliacaoLoja[]
+  comentariosAvaliacaoLoja ComentarioAvaliacaoLoja []
+  avaliacoesProduto AvaliacaoProduto[]
+  comentariosAvaliacaoProduto ComentarioAvaliacaoProduto []
+}
+
+model Loja {
+  id Int @id @default(autoincrement())
+  usuarioId Int
+  categoriaId Int
+  nome String @db.VarChar(255) @unique
+  descricao String @db.Text
+  logo String?
+  banner String?
+  sticker String?
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  produtos Produto []
+  avaliacoes AvaliacaoLoja []
+  usuario Usuario @relation(fields: [usuarioId], references: [id], onDelete: Cascade, onUpdate: Cascade)
+  categoria Categoria @relation(fields: [categoriaId], references: [id], onDelete: Cascade, onUpdate: Cascade)
+}
+
+model Categoria {
+  id Int @id @default(autoincrement())
+  nome CategoriasNome @unique
+  lojas Loja[]
+  subcategorias Subcategoria []
+}
+
+enum CategoriasNome {
+  MERCADO
+  FARMACIA
+  BELEZA
+  MODA
+  ELETRONICOS
+  JOGOS
+  BRINQUEDOS
+  CASA
+}
+
+model Subcategoria {
+  id Int @id @default(autoincrement())
+  nome String @db.VarChar(100)
+  categoriaId Int
+  produtos Produto []
+  categoria Categoria @relation(fields: [categoriaId], references: [id], onDelete: Cascade, onUpdate: Cascade)
+  @@unique([nome, categoriaId])
+}
+
+model Produto {
+  id Int @id @default(autoincrement())
+  lojaId Int
+  subcategoriaId Int
+  nome String @db.VarChar(255)
+  descricao String @db.Text
+  preco Decimal @db.Decimal(10, 2)
+  estoque Int
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  imagens ImagemProduto []
+  avaliacoes AvaliacaoProduto []
+  loja Loja @relation(fields: [lojaId], references: [id], onDelete: Cascade, onUpdate: Cascade)
+  subcategoria Subcategoria @relation(fields: [subcategoriaId], references: [id], onDelete: Cascade, onUpdate: Cascade)
+}
+
+model ImagemProduto {
+  id Int @id @default(autoincrement())
+  produtoId Int
+  urlImagem String
+  ordem Int
+  produto Produto @relation(fields: [produtoId], references: [id], onDelete: Cascade, onUpdate: Cascade)
+  @@unique([ordem, produtoId])
+}
+
+model AvaliacaoLoja {
+  id Int @id @default(autoincrement())
+  usuarioId Int
+  lojaId Int
+  nota Int
+  conteudo String @db.Text
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  comentario ComentarioAvaliacaoLoja []
+  usuario Usuario @relation(fields: [usuarioId], references: [id], onDelete: Cascade, onUpdate: Cascade)
+  loja Loja @relation(fields: [lojaId], references: [id], onDelete: Cascade, onUpdate: Cascade)
+  @@unique([usuarioId, lojaId])
+}
+
+model ComentarioAvaliacaoLoja {
+  id Int @id @default(autoincrement())
+  usuarioId Int
+  avaliacaoLojaId Int
+  conteudo String @db.Text
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  usuario Usuario @relation(fields: [usuarioId], references: [id], onDelete: Cascade, onUpdate: Cascade)
+  avaliacaoLoja AvaliacaoLoja @relation(fields: [avaliacaoLojaId], references: [id], onDelete: Cascade, onUpdate: Cascade)
+}
+
+model AvaliacaoProduto {
+  id Int @id @default(autoincrement())
+  usuarioId Int
+  produtoId Int
+  nota Int
+  conteudo String @db.Text
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  comentario ComentarioAvaliacaoProduto []
+  usuario Usuario @relation(fields: [usuarioId], references: [id], onDelete: Cascade, onUpdate: Cascade)
+  produto Produto @relation(fields: [produtoId], references: [id], onDelete: Cascade, onUpdate: Cascade)
+  @@unique([usuarioId, produtoId])
+}
+
+model ComentarioAvaliacaoProduto {
+  id Int @id @default(autoincrement())
+  usuarioId Int
+  avaliacaoProdutoId Int
+  conteudo String @db.Text
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  usuario Usuario @relation(fields: [usuarioId], references: [id], onDelete: Cascade, onUpdate: Cascade)
+  avaliacaoProduto AvaliacaoProduto @relation(fields: [avaliacaoProdutoId], references: [id], onDelete: Cascade, onUpdate: Cascade)
+}
