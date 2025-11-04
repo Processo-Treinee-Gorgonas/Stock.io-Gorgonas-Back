@@ -6,9 +6,10 @@ import { AppService } from './app.service';
 import { UsuarioModule } from './usuario/usuario.module';
 import { PrismaModule } from './database/prisma.module';
 import { LojaModule } from './loja/loja.module';
+import { ProdutoModule } from './produto/produto.module';
 
 @Module({
-  imports: [UsuarioModule, ConfigModule.forRoot({ isGlobal: true }), AuthModule, PrismaModule, LojaModule],
+  imports: [UsuarioModule, ConfigModule.forRoot({ isGlobal: true }), AuthModule, PrismaModule, LojaModule, ProdutoModule],
   controllers: [AppController],
   providers: [AppService],
 })
