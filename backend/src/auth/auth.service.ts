@@ -1,51 +1,57 @@
 // src/auth/auth.service.ts
 import { Injectable, UnauthorizedException } from '@nestjs/common';
-import { UsuarioService } from '../usuario/usuario.service'; // <-- IMPORTA O SERVIÇO DO SEU GRUPO
+import { UsuarioService } from '../usuario/usuario.service';
 import { JwtService } from '@nestjs/jwt';
 import * as bcrypt from 'bcrypt';
 
 @Injectable()
 export class AuthService {
   constructor(
+    // Injeta o serviço que fala com a tabela 'Usuario'
     private usuarioService: UsuarioService, 
-    // Injeta o serviço de JWT
+    // Injeta o serviço que "assina" e cria o JWT
     private jwtService: JwtService,
   ) {}
 
   /**
-  valida se a senha do usuário está correta.
+   * Esta é a função que o 'LocalStrategy' chama.
+   * Ela é o "cérebro" da validação.
    */
   async validateUser(email: string, pass: string): Promise<any> {
     let usuario;
     try {
-      // Tenta buscar o usuário pelo e-mail
+      // 1. Busca o usuário no banco (com a senhaHash!)
+      //    (O 'findOneByEmail' é uma função que você já tem no seu UsuarioService)
       usuario = await this.usuarioService.findOneByEmail(email); 
     } catch (error) {
-      // Se 'findOneByEmail' lançar NotFoundException, as credenciais são inválidas
+      // Se 'findOneByEmail' falhar (ex: NotFound), as credenciais são inválidas
       throw new UnauthorizedException('E-mail ou senha inválidos.');
     }
 
-    //Compara a senha enviada com o hash salvo no banco
+    // 2. Compara a senha enviada (pass) com o hash salvo no banco (usuario.senhaHash)
     if (usuario && (await bcrypt.compare(pass, usuario.senhaHash))) {
-      const { senhaHash, ...result } = usuario; // Remove o hash da resposta
-      return result; // Retorna o objeto do usuário (sem o hash)
+      const { senhaHash, ...result } = usuario; // 3. Remove o hash da resposta
+      return result; // 4. Retorna o objeto do usuário (sem o hash)
     }
 
-    // 3. Se a senha não bater, retorna nulo (a LocalStrategy vai tratar)
+    // 5. Se a senha não bater, retorna nulo (a LocalStrategy vai tratar)
     return null;
   }
 
   /**
-   * Este método é chamado pelo AuthController DEPOIS que o
-   * usuário foi validado pela LocalStrategy.
+   * Esta função é chamada pelo 'AuthController' DEPOIS que o
+   * usuário foi validado com sucesso.
+   * Ela cria o Token JWT.
    */
   async login(usuario: any) {
-    // O 'usuario' aqui já está validado
+    // O 'usuario' que recebemos aqui é o 'result' da função 'validateUser'
     const payload = { 
       email: usuario.email, 
-      sub: usuario.id, 
+      sub: usuario.id, // 'sub' (subject) é o nome padrão para o ID do usuário no JWT
       nome: usuario.nome,
     };
+    
+    // "Assina" o payload com o seu JWT_SECRET e retorna o token
     return {
       access_token: this.jwtService.sign(payload),
     };

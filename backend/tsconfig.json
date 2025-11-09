@@ -20,6 +20,11 @@
     "forceConsistentCasingInFileNames": true,
     "noImplicitAny": false,
     "strictBindCallApply": false,
-    "noFallthroughCasesInSwitch": false
+    "noFallthroughCasesInSwitch": false,
+    "types": [
+      "node",  // Essencial para o backend (process.env, etc.)
+      "jest",  // Essencial para o ambiente de teste (describe, it, expect)
+      "supertest" // A correção para o 'request'
+    ]
   }
 }
