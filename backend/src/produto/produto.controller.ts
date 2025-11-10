@@ -18,6 +18,7 @@ import { CreateProdutoDto } from './dto/create-produto.dto';
 import { UpdateProdutoDto } from './dto/update-produto.dto';
 import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
 import { Produto } from '../../generated/prisma';
+import { use } from 'passport';
 
 // Helper: pega o ID do usuário do token (ajuste aqui se no seu token for "user.id")
 function getUserId(req: any): number {
@@ -92,4 +93,12 @@ export class ProdutoController {
     await this.produtoService.delete(id, userId);
     // Sem corpo de resposta (204), igual ao padrão do controller de loja
   }
+
+  @Get('ver-mais/:slug')
+  async ProcurarPorCategoria(
+    @Param('slug') slug: string,
+  ) {
+    return this.produtoService.ProcurarPorCategoria(slug  );
+  }
+
 }

@@ -1,42 +1,40 @@
+// src/auth/strategies/local.strategy.ts
 import { Strategy } from 'passport-local';
 import { PassportStrategy } from '@nestjs/passport';
 import { Injectable, UnauthorizedException } from '@nestjs/common';
 import { AuthService } from '../auth.service';
-import { LoginDto } from '../dto/login.dto'; // Importa o DTO de login
 
 @Injectable()
-export class LocalStrategy extends PassportStrategy(Strategy) {
+export class LocalStrategy extends PassportStrategy(Strategy, 'local') {
   constructor(
-    //Injeta o AuthService (o "cérebro")
+    // Injeta o AuthService (o "cérebro" que tem a lógica do bcrypt)
     private authService: AuthService,
   ) {
-    //Configura o "passport-local"
+    // Configura o "passport-local"
     super({
-      // Informa ao Passport qual campo do DTO (body)
+      // 1. Informa ao Passport que o "username" é o campo 'email'
       usernameField: 'email',
-
-      // Informa ao Passport qual campo do DTO (body)
+      // 2. Informa que a "password" é o campo 'senha'
       passwordField: 'senha',
     });
   }
+
   /**
-   * quando a rota @UseGuards(AuthGuard('local')) é atingida.
-   *
-   * @param email - O valor do campo 'email' do body
-   * @param senha - O valor do campo 'senha' do body
+   * Esta função é chamada automaticamente pelo AuthGuard('local')
+   * (que vamos colocar na rota de login).
    */
   async validate(email: string, senha: string): Promise<any> {
     
-    // Delega a lógica de validação para o AuthService
-    // (que vai buscar no banco e comparar o hash do bcrypt)
+    // 3. Delega a lógica de validação para o AuthService
     const usuario = await this.authService.validateUser(email, senha);
 
-    //Se o AuthService retornar nulo, significa que a senha
-    //    ou o e-mail estavam errados.
+    // 4. Se o AuthService retornar nulo (senha errada ou email não existe)
     if (!usuario) {
-      // Lança uma exceção HTTP 401
+      // Lança o erro 401 que o seu frontend vai receber
       throw new UnauthorizedException('E-mail ou senha inválidos.');
     }
+    
+    // 5. Se deu certo, retorna o usuário (sem a senha)
     return usuario;
   }
 }

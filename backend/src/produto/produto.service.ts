@@ -7,7 +7,7 @@ import {
 import { CreateProdutoDto } from './dto/create-produto.dto';
 import { UpdateProdutoDto } from './dto/update-produto.dto';
 import { PrismaService } from '../database/prisma.service';
-import { Produto } from '../../generated/prisma'; // mesmo padrão do seu amigo
+import { CategoriasNome, Produto } from '../../generated/prisma';
 
 @Injectable()
 export class ProdutoService {
@@ -175,6 +175,44 @@ export class ProdutoService {
         subcategoria: true,
         loja: { select: { id: true, nome: true } },
       },
+    });
+  }
+
+  async ProcurarPorCategoria(slug: string) {
+
+    const nomeDaCategoria = slug.toUpperCase() as CategoriasNome;
+    
+    return this.prisma.produto.findMany({
+    
+      //Filtra por caegoria
+      where: {
+        subcategoria: {
+          categoria: { 
+            nome: nomeDaCategoria
+          }
+        }
+      },
+
+
+      select: {
+        id: true,
+        nome: true,
+        preco: true,
+        estoque: true,
+        
+        loja: { 
+          select: { 
+            logo: true,
+          } 
+        },
+
+        imagens: {
+          take: 1, 
+          orderBy: { ordem: 'asc' },
+          select: { urlImagem: true }
+        }
+
+      }
     });
   }
 }
