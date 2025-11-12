@@ -63,8 +63,11 @@ export class ProdutoController {
     return this.produtoService.findAll();
   }
 
+  @Get('loja/:lojaId')
+  findAllFromStore(@Param('lojaId', ParseIntPipe) lojaId: number) {
+    return this.produtoService.findAllFromStore(lojaId);
+  }
   // LISTAR apenas os produtos das lojas do usuário logado (GET /produtos/minhas)
-  // (mantive o nome "minhas" para ficar 1:1 com o controller de loja do seu amigo)
   @UseGuards(JwtAuthGuard)
   @Get('minhas')
   async findMy(@Request() req): Promise<Produto[]> {

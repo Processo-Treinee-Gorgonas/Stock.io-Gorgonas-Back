@@ -177,6 +177,32 @@ export class ProdutoService {
       },
     });
   }
+  async findAllFromStore(lojaId:number){
+    return this.prisma.produto.findMany({
+      // 1. Filtra pela lojaId
+      where: {
+        lojaId: lojaId,
+      },
+      
+      // 2. Seleciona SÓ o que o ProductCard precisa (leve e rápido)
+      select: {
+        id: true,
+        nome: true,
+        preco: true,
+        estoque: true,
+        loja: { 
+          select: { 
+            logo: true,
+          } 
+        },
+        imagens: {
+          take: 1, 
+          orderBy: { ordem: 'asc' },
+          select: { urlImagem: true }
+        }
+      },
+    });
+  }
 
   async ProcurarPorCategoria(slug: string) {
 
