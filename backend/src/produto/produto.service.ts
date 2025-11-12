@@ -138,7 +138,14 @@ export class ProdutoService {
       where: { id },
       include: {
         subcategoria: true,
-        loja: { select: { id: true, nome: true } },
+        loja: {
+          select: {
+            id: true,
+            nome: true,
+            logo: true,
+            usuarioId: true 
+          }
+        },
         imagens: true,
         avaliacoes: true,
       },
