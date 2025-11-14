@@ -138,7 +138,14 @@ export class ProdutoService {
       where: { id },
       include: {
         subcategoria: true,
-        loja: { select: { id: true, nome: true } },
+        loja: {
+          select: {
+            id: true,
+            nome: true,
+            logo: true,
+            usuarioId: true 
+          }
+        },
         imagens: true,
         avaliacoes: true,
       },
@@ -174,6 +181,32 @@ export class ProdutoService {
       include: {
         subcategoria: true,
         loja: { select: { id: true, nome: true } },
+      },
+    });
+  }
+  async findAllFromStore(lojaId:number){
+    return this.prisma.produto.findMany({
+      // 1. Filtra pela lojaId
+      where: {
+        lojaId: lojaId,
+      },
+      
+      // 2. Seleciona SÓ o que o ProductCard precisa (leve e rápido)
+      select: {
+        id: true,
+        nome: true,
+        preco: true,
+        estoque: true,
+        loja: { 
+          select: { 
+            logo: true,
+          } 
+        },
+        imagens: {
+          take: 1, 
+          orderBy: { ordem: 'asc' },
+          select: { urlImagem: true }
+        }
       },
     });
   }
