@@ -12,6 +12,8 @@ import {
   ForbiddenException,
   HttpCode,
   HttpStatus,
+  Query,
+  DefaultValuePipe
 } from '@nestjs/common';
 import { ProdutoService } from './produto.service';
 import { CreateProdutoDto } from './dto/create-produto.dto';
@@ -25,10 +27,19 @@ function getUserId(req: any): number {
   return req?.user?.userId as number;
 }
 
+
 // Define a rota base para este controller como /produtos
 @Controller('produtos')
 export class ProdutoController {
   constructor(private readonly produtoService: ProdutoService) {}
+
+  @Get('recentes')
+  async listarProdutos(
+    @Query('page', new DefaultValuePipe(1), ParseIntPipe) page: number,
+    @Query('limit', new DefaultValuePipe(15), ParseIntPipe) limit: number,
+  ) {
+    return this.produtoService.listarProdutos(page, limit);
+  }
 
   // CRIAR produto (POST /produtos) – somente usuário autenticado
   @UseGuards(JwtAuthGuard)
