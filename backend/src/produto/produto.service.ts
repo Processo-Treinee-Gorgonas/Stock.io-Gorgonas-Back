@@ -248,4 +248,37 @@ export class ProdutoService {
       }
     });
   }
+
+  async listarProdutos(page: number, limit: number) {
+    
+    const skip = (page - 1) * limit;
+
+    const produtosPromise = this.prisma.produto.findMany({
+      orderBy: { id: 'desc' },
+      take: limit,
+      skip: skip,
+      select: {
+        id: true,
+        nome: true,
+        preco: true,
+        estoque: true,
+        loja: { select: { logo: true } },
+        imagens: {
+          take: 1, 
+          orderBy: { ordem: 'asc' },
+          select: { urlImagem: true }
+        }
+      }
+    });
+
+    const totalProdutosPromise = this.prisma.produto.count();
+
+    const [produtos, totalCount] = await this.prisma.$transaction([
+      produtosPromise,
+      totalProdutosPromise
+    ]);
+
+    return { produtos, totalCount };
+  }
+
 }
