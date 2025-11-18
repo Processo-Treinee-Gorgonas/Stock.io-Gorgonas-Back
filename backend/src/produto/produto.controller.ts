@@ -89,6 +89,14 @@ export class ProdutoController {
     return this.produtoService.findMyProdutos(userId);
   }
 
+  // ROTA DA SEARCHBAR
+  @Get('buscar')
+  async search(@Query('q') query: string) {
+    if (!query) {
+      return []; // Retorna vazio se a busca for vazia
+    }
+    return this.produtoService.search(query);
+  }
   // BUSCAR produto pelo ID (GET /produtos/:id) – rota pública
   @Get(':id')
   async findOne(@Param('id', ParseIntPipe) id: number): Promise<Produto> {
