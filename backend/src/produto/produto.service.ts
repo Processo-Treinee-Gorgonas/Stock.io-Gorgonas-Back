@@ -215,7 +215,7 @@ export class ProdutoService {
     const nomeDaCategoria = slug.toUpperCase() as CategoriasNome;
     return this.prisma.produto.findMany({
     
-      //Filtra por caegoria
+      //Filtra por categoria
       where: {
         subcategoria: {
           categoria: { 
@@ -223,8 +223,6 @@ export class ProdutoService {
           }
         }
       },
-
-
       select: {
         id: true,
         nome: true,
@@ -246,11 +244,8 @@ export class ProdutoService {
       }
     });
   }
-
   async listarProdutos(page: number, limit: number) {
-    
     const skip = (page - 1) * limit;
-
     const produtosPromise = this.prisma.produto.findMany({
       orderBy: { id: 'desc' },
       take: limit,
@@ -278,47 +273,41 @@ export class ProdutoService {
 
     return { produtos, totalCount };
   }
-  async search(query: string) {
+  //Função de pesquisa 
+  async search(query: string, categoriaNome?: string) {
     const orConditions: Prisma.ProdutoWhereInput[] = [
-      {
-        nome: {
-          contains: query,
-          mode: 'insensitive', 
-        },
-      },
-      {
-        loja: {
-          nome: {
-            contains: query,
-            mode: 'insensitive',
-          },
-        },
-      },
+       { nome: { contains: query, mode: 'insensitive' } },
+       { loja: { nome: { contains: query, mode: 'insensitive' } } },
     ];
     const queryAsCategoria = query.toUpperCase() as CategoriasNome;
     if (Object.values(CategoriasNome).includes(queryAsCategoria)) {
       orConditions.push({
-        subcategoria: {
-          categoria: {
-            nome: queryAsCategoria,
-          },
-        },
+        subcategoria: { categoria: { nome: queryAsCategoria } },
       });
     }
+
+    const whereClause: Prisma.ProdutoWhereInput = {
+      OR: orConditions,
+    };
+    if (categoriaNome) {
+      const catEnum = categoriaNome.toUpperCase() as CategoriasNome;
+      
+      if (Object.values(CategoriasNome).includes(catEnum)) {
+        whereClause.subcategoria = {
+          categoria: {
+            nome: catEnum 
+          }
+        };
+      }
+    }
     return this.prisma.produto.findMany({
-      where: {
-        OR: orConditions, // Usa a lista de condições
-      },
+      where: whereClause,
       select: {
         id: true,
         nome: true,
         preco: true,
         estoque: true,
-        loja: { 
-          select: { 
-            logo: true,
-          } 
-        },
+        loja: { select: { logo: true } },
         imagens: {
           take: 1, 
           orderBy: { ordem: 'asc' },

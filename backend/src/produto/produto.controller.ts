@@ -91,11 +91,11 @@ export class ProdutoController {
 
   // ROTA DA SEARCHBAR
   @Get('buscar')
-  async search(@Query('q') query: string) {
+  async search(@Query('q') query: string, @Query('categoria') categoria?: string) {
     if (!query) {
       return []; // Retorna vazio se a busca for vazia
     }
-    return this.produtoService.search(query);
+    return this.produtoService.search(query, categoria);
   }
   // BUSCAR produto pelo ID (GET /produtos/:id) – rota pública
   @Get(':id')
