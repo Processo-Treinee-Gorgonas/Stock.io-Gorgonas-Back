@@ -7,7 +7,7 @@ import {
 import { CreateProdutoDto } from './dto/create-produto.dto';
 import { UpdateProdutoDto } from './dto/update-produto.dto';
 import { PrismaService } from '../database/prisma.service';
-import { CategoriasNome, Produto } from '../../generated/prisma';
+import { CategoriasNome, Produto, Prisma } from '../../generated/prisma';
 
 @Injectable()
 export class ProdutoService {
@@ -174,7 +174,7 @@ export class ProdutoService {
     await this.prisma.produto.delete({ where: { id } });
   }
 
-  // (Opcional) Produtos do usuário logado — equivalente ao findMyLojas
+  // Produtos do usuário logado — equivalente ao findMyLojas
   async findMyProdutos(userId: number): Promise<Produto[]> {
     return this.prisma.produto.findMany({
       where: { loja: { usuarioId: userId } },
@@ -212,9 +212,7 @@ export class ProdutoService {
   }
 
   async ProcurarPorCategoria(slug: string) {
-
     const nomeDaCategoria = slug.toUpperCase() as CategoriasNome;
-    
     return this.prisma.produto.findMany({
     
       //Filtra por caegoria
@@ -280,5 +278,54 @@ export class ProdutoService {
 
     return { produtos, totalCount };
   }
-
+  async search(query: string) {
+    const orConditions: Prisma.ProdutoWhereInput[] = [
+      {
+        nome: {
+          contains: query,
+          mode: 'insensitive', 
+        },
+      },
+      {
+        loja: {
+          nome: {
+            contains: query,
+            mode: 'insensitive',
+          },
+        },
+      },
+    ];
+    const queryAsCategoria = query.toUpperCase() as CategoriasNome;
+    if (Object.values(CategoriasNome).includes(queryAsCategoria)) {
+      orConditions.push({
+        subcategoria: {
+          categoria: {
+            nome: queryAsCategoria,
+          },
+        },
+      });
+    }
+    return this.prisma.produto.findMany({
+      where: {
+        OR: orConditions, // Usa a lista de condições
+      },
+      select: {
+        id: true,
+        nome: true,
+        preco: true,
+        estoque: true,
+        loja: { 
+          select: { 
+            logo: true,
+          } 
+        },
+        imagens: {
+          take: 1, 
+          orderBy: { ordem: 'asc' },
+          select: { urlImagem: true }
+        }
+      },
+      take: 20,
+    });
+  }
 }
