@@ -14,7 +14,7 @@ import {
   HttpStatus,
 } from '@nestjs/common';
 import { CategoriaService } from './categoria.service';
-import { Categoria } from '../../generated/prisma';
+import { Categoria } from '@prisma/client';
 
 // Define a rota base para todas as operações deste controller como '/lojas'
 @Controller('categorias')

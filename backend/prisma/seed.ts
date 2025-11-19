@@ -1,5 +1,5 @@
-// 1. Importa o Prisma Client e o seu Enum de Categorias
-import { PrismaClient, CategoriasNome } from '../generated/prisma';
+// Importa Prisma Client e o Enum direto do pacote padrão
+import { PrismaClient, CategoriasNome } from '@prisma/client';
 
 // 2. Inicializa o Prisma
 const prisma = new PrismaClient();

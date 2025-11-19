@@ -17,7 +17,7 @@ import { LojaService } from './loja.service';
 import { CreateLojaDto } from './dto/create-loja.dto';
 import { UpdateLojaDto } from './dto/update-loja.dto';
 import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard'; // Guardião que verifica o token JWT
-import { Loja } from '../../generated/prisma';
+import { Loja } from '@prisma/client';
 
 // Define a rota base para todas as operações deste controller como '/lojas'
 @Controller('lojas')
