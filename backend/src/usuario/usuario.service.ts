@@ -2,7 +2,7 @@ import { Injectable, BadRequestException, ConflictException, NotFoundException }
 import { CreateUsuarioDto } from './dto/create-usuario.dto';
 import { UpdateUsuarioDto } from './dto/update-usuario.dto';
 import { PrismaService } from '../database/prisma.service';
-import { Usuario } from '../../generated/prisma';
+import { Usuario } from '@prisma/client';
 import * as bcrypt from 'bcrypt';
 
 @Injectable()

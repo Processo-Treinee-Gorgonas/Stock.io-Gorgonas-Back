@@ -2,7 +2,7 @@ import { Injectable, NotFoundException, ForbiddenException, ConflictException } 
 import { CreateLojaDto } from './dto/create-loja.dto';
 import { UpdateLojaDto } from './dto/update-loja.dto';
 import { PrismaService } from '../database/prisma.service'; // Importa o serviço Prisma configurado
-import { Loja } from '../../generated/prisma'; // Importa o tipo Loja gerado pelo Prisma
+import { Loja } from '@prisma/client'; // Importa o tipo Loja gerado pelo Prisma
 
 @Injectable()
 export class LojaService {
