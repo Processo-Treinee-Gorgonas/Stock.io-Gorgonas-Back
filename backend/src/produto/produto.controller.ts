@@ -113,7 +113,6 @@ export class ProdutoController {
       throw new ForbiddenException('ID do usuário inválido ou não encontrado no token.');
     }
     await this.produtoService.delete(id, userId);
-    // Sem corpo de resposta (204), igual ao padrão do controller de loja
   }
 
   @Get('ver-mais/:slug')
@@ -135,7 +134,6 @@ export class ProdutoController {
   async PorCategoriaPage(
     @Param('slug') slug: string,
     @Query('ordenar') ordenar?: string,
-    // Use strings '15' e '1' nos DefaultValuePipe para evitar erro 400 do ParseIntPipe
     @Query('limit', new DefaultValuePipe('15'), ParseIntPipe) limit?: number,
     @Query('page', new DefaultValuePipe('1'), ParseIntPipe) page?: number,
   ) {

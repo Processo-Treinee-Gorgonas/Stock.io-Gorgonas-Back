@@ -186,12 +186,12 @@ export class ProdutoService {
   }
   async findAllFromStore(lojaId:number){
     return this.prisma.produto.findMany({
-      // 1. Filtra pela lojaId
+      //Filtra pela lojaId
       where: {
         lojaId: lojaId,
       },
       
-      // 2. Seleciona SÓ o que o ProductCard precisa (leve e rápido)
+      //Seleciona SÓ o que o ProductCard precisa (leve e rápido)
       select: {
         id: true,
         nome: true,
@@ -228,7 +228,7 @@ export class ProdutoService {
         subcategoria: { categoria: { nome: nomeDaCategoria } }
       },
       orderBy: orderByClause,
-      take: 10, // Limite fixo para vitrine
+      take: 10, 
       
       select: {
         id: true,
@@ -256,25 +256,24 @@ export class ProdutoService {
   ) {
     const nomeDaCategoria = slug.toUpperCase() as CategoriasNome;
 
-    // 1. Paginação
+    //Paginação
     const page = options?.page || 1;
     const limit = options?.limit || 15;
     const skip = (page - 1) * limit;
 
-    // 2. Ordenação
-    let orderByClause: any = { id: 'desc' }; // Padrão
+    //Ordenação
+    let orderByClause: any = { id: 'desc' };
 
     if (options?.orderBy === 'rating') {
       orderByClause = { avaliacoes: { _count: 'desc' } };
     } else if (options?.orderBy === 'recentes') {
       orderByClause = { createdAt: 'desc' };
     } else if (options?.orderBy === 'preco') {
-      orderByClause = { preco: 'asc' }; // Preço geralmente é crescente (menor para maior)
+      orderByClause = { preco: 'asc' };
     } else{
       orderByClause = { id: 'desc' };
     }
 
-    // 3. Busca Paginada
     const produtosPromise = this.prisma.produto.findMany({
       where: {
         subcategoria: { categoria: { nome: nomeDaCategoria } }
@@ -298,7 +297,7 @@ export class ProdutoService {
       }
     });
 
-    // 4. Contagem Total
+    // Contagem Total
     const totalProdutosPromise = this.prisma.produto.count({
        where: {
         subcategoria: { categoria: { nome: nomeDaCategoria } }
