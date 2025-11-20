@@ -211,11 +211,18 @@ export class ProdutoService {
     });
   }
 
-  async ProcurarPorCategoria(slug: string) {
+  async ProcurarPorCategoria(slug: string, options?: { orderBy?: 'rating', limit?: number }) {
     const nomeDaCategoria = slug.toUpperCase() as CategoriasNome;
+    let orderByClause: any = { id: 'desc' };
+    if (options?.orderBy === 'rating') {
+      orderByClause = {
+        avaliacoes: {
+          _count: 'desc' 
+        }
+      };
+    }
+
     return this.prisma.produto.findMany({
-    
-      //Filtra por categoria
       where: {
         subcategoria: {
           categoria: { 
@@ -223,27 +230,30 @@ export class ProdutoService {
           }
         }
       },
+      orderBy: orderByClause,
+      take: options?.limit || undefined,
       select: {
         id: true,
         nome: true,
         preco: true,
         estoque: true,
-        
         loja: { 
           select: { 
             logo: true,
           } 
         },
-
         imagens: {
           take: 1, 
           orderBy: { ordem: 'asc' },
           select: { urlImagem: true }
+        },
+        avaliacoes: {
+          select: { nota: true }
         }
-
       }
     });
   }
+  
   async listarProdutos(page: number, limit: number) {
     const skip = (page - 1) * limit;
     const produtosPromise = this.prisma.produto.findMany({

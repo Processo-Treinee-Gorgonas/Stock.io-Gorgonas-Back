@@ -119,8 +119,21 @@ export class ProdutoController {
   @Get('ver-mais/:slug')
   async ProcurarPorCategoria(
     @Param('slug') slug: string,
+    @Query('ordenar') ordenar?: string, 
+    @Query('limit', new DefaultValuePipe(20), ParseIntPipe) limit?: number
   ) {
-    return this.produtoService.ProcurarPorCategoria(slug  );
+    const options: any = {
+      limit: limit
+    };
+    if (ordenar === 'avaliacoes') {
+      options.orderBy = 'rating';
+    }else if(ordenar=== 'preco'){
+      options.orderBy = 'preco'
+    }else if (ordenar === 'createdAt'){
+      options.orderBy = 'createdAt'
+    }else{
+      options.orderBy = 'id';
+    }
+    return this.produtoService.ProcurarPorCategoria(slug, options);
   }
-
 }
