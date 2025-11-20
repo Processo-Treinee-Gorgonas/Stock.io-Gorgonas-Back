@@ -119,21 +119,33 @@ export class ProdutoController {
   @Get('ver-mais/:slug')
   async ProcurarPorCategoria(
     @Param('slug') slug: string,
-    @Query('ordenar') ordenar?: string, 
-    @Query('limit', new DefaultValuePipe(20), ParseIntPipe) limit?: number
+    @Query('ordenar') ordenar?: string
   ) {
-    const options: any = {
-      limit: limit
-    };
+    const options: any = {};
+
     if (ordenar === 'avaliacoes') {
       options.orderBy = 'rating';
-    }else if(ordenar=== 'preco'){
-      options.orderBy = 'preco'
     }else if (ordenar === 'createdAt'){
       options.orderBy = 'createdAt'
-    }else{
-      options.orderBy = 'id';
     }
     return this.produtoService.ProcurarPorCategoria(slug, options);
+  }
+
+  @Get('categoria/:slug')
+  async PorCategoriaPage(
+    @Param('slug') slug: string,
+    @Query('ordenar') ordenar?: string,
+    // Use strings '15' e '1' nos DefaultValuePipe para evitar erro 400 do ParseIntPipe
+    @Query('limit', new DefaultValuePipe('15'), ParseIntPipe) limit?: number,
+    @Query('page', new DefaultValuePipe('1'), ParseIntPipe) page?: number,
+  ) {
+    const options: any = { limit, page };
+
+    if (ordenar === 'avaliacoes') options.orderBy = 'rating';
+    else if (ordenar === 'recentes') options.orderBy = 'recentes';
+    else if (ordenar === 'preco') options.orderBy = 'preco';
+    else if (ordenar === 'id') options.orderBy = 'id';
+
+    return this.produtoService.PorCategoriaPage(slug, options);
   }
 }
