@@ -3,6 +3,7 @@ import { CreateLojaDto } from './dto/create-loja.dto';
 import { UpdateLojaDto } from './dto/update-loja.dto';
 import { PrismaService } from '../database/prisma.service'; // Importa o serviço Prisma configurado
 import { Loja } from '@prisma/client'; // Importa o tipo Loja gerado pelo Prisma
+import { CategoriasNome } from '@prisma/client';
 
 @Injectable()
 export class LojaService {
@@ -24,7 +25,7 @@ export class LojaService {
             where: { id: data.categoriaId },
         });
         if (!categoriaExiste) {
-            throw new NotFoundException(`Categoria com ID ${data.categoriaId} não encontrada.`);
+            throw new NotFoundException('Categoria com ID ${data.categoriaId} não encontrada.');
         }
 
         // Cria a loja no banco de dados, associando ao usuário (userId)
@@ -44,7 +45,7 @@ export class LojaService {
             where: { id: id },
         });
         if (!lojaExistente) {
-            throw new NotFoundException(`Loja com ID ${id} não encontrada.`);
+            throw new NotFoundException('Loja com ID ${id} não encontrada.');
         }
         // Garante que apenas o dono possa editar a loja
         if (lojaExistente.usuarioId !== userId) {
@@ -66,7 +67,7 @@ export class LojaService {
                  where: { id: data.categoriaId },
              });
              if (!categoriaExiste) {
-                 throw new NotFoundException(`Categoria com ID ${data.categoriaId} não encontrada.`);
+                 throw new NotFoundException('Categoria com ID ${data.categoriaId} não encontrada.');
              }
          }
 
@@ -101,7 +102,7 @@ export class LojaService {
         });
         // Se a loja não for encontrada, lança um erro 404
         if (!loja) {
-            throw new NotFoundException(`Loja com ID ${id} não encontrada.`);
+            throw new NotFoundException('Loja com ID ${id} não encontrada.');
         }
         return loja;
     }
@@ -113,7 +114,7 @@ export class LojaService {
             where: { id: id },
         });
         if (!lojaExistente) {
-            throw new NotFoundException(`Loja com ID ${id} não encontrada.`);
+            throw new NotFoundException('Loja com ID ${id} não encontrada.');
         }
         // Garante que apenas o dono possa deletar a loja
         if (lojaExistente.usuarioId !== userId) {
@@ -121,7 +122,7 @@ export class LojaService {
         }
 
         // Deleta a loja do banco de dados
-        // Nota: Relações com `onDelete: Cascade` no schema Prisma cuidarão da exclusão de dados dependentes (ex: Produtos).
+        // Nota: Relações com onDelete: Cascade no schema Prisma cuidarão da exclusão de dados dependentes (ex: Produtos).
         await this.prisma.loja.delete({
             where: { id: id },
         });
@@ -135,4 +136,26 @@ export class LojaService {
             include: { categoria: true } // Inclui dados da categoria
         });
     }
+
+      async ProcurarPorCategoria(slug: string) {
+        const nomeDaCategoria = slug.toUpperCase() as CategoriasNome;
+        return this.prisma.loja.findMany({
+
+          //Filtra por caegoria
+          where: {
+              categoria: { 
+                nome: nomeDaCategoria
+              }
+            },
+    
+    
+          select: {
+            id: true,
+            nome: true,
+            logo: true,
+            banner: true,
+            sticker: true
+          }
+        });
+      }
 }
