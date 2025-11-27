@@ -6,7 +6,7 @@ import { CategoriasNome } from '@prisma/client';
 export class CategoriaService {
   constructor(private prisma: PrismaService) {}
 
-  // ... (seus outros métodos create, findAll, etc.)
+  // Métodos adicionais podem ser adicionados conforme necessário
 
   /**
    * Busca uma categoria pelo nome e retorna suas subcategorias.
