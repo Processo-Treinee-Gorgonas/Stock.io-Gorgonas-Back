@@ -13,10 +13,12 @@ export class CategoriaService {
    * Ex: Entrada "MERCADO" -> Retorna { id: 1, nome: "MERCADO", subcategorias: [...] }
    */
   async findOneByName(nome: string) {
-    
-    // 1. Converte a string (ex: "mercado") para o formato do Enum (ex: "MERCADO")
-    // Isso evita erros se o front mandar minúsculo
-    const nomeEnum = nome.toUpperCase() as CategoriasNome;
+    // Normaliza acentos e caixa para compatibilidade com enum Prisma
+    const normalize = (s: string) => s
+      .normalize('NFD')
+      .replace(/[\u0300-\u036f]/g, '')
+      .toUpperCase();
+    const nomeEnum = normalize(nome) as CategoriasNome;
 
     // 2. Busca no banco
     const categoria = await this.prisma.categoria.findUnique({
