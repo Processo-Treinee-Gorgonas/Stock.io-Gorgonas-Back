@@ -12,6 +12,7 @@ import {
   ForbiddenException,
   HttpCode,
   HttpStatus,
+  Query,
 } from '@nestjs/common';
 import { LojaService } from './loja.service';
 import { CreateLojaDto } from './dto/create-loja.dto';
@@ -58,8 +59,8 @@ export class LojaController {
 
   // Rota para LISTAR TODAS as lojas (GET /lojas) - Rota Pública
   @Get()
-  async findAll(): Promise<Loja[]> {
-    return this.lojaService.findAll();
+  async findAll(@Query('categoria') categoria?: string): Promise<Loja[]> {
+    return this.lojaService.findAll(categoria);
   }
 
    // Rota para LISTAR APENAS AS LOJAS DO USUÁRIO LOGADO (GET /lojas/minhas)

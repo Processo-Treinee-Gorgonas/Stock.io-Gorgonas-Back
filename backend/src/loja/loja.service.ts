@@ -2,7 +2,7 @@ import { Injectable, NotFoundException, ForbiddenException, ConflictException } 
 import { CreateLojaDto } from './dto/create-loja.dto';
 import { UpdateLojaDto } from './dto/update-loja.dto';
 import { PrismaService } from '../database/prisma.service'; // Importa o serviço Prisma configurado
-import { Loja } from '../../generated/prisma'; // Importa o tipo Loja gerado pelo Prisma
+import { CategoriasNome, Loja, Prisma } from '../../generated/prisma/client';
 
 @Injectable()
 export class LojaService {
@@ -79,8 +79,23 @@ export class LojaService {
     }
 
     // Retorna uma lista de todas as lojas cadastradas (rota pública)
-    async findAll(): Promise<Loja[]> {
+    async findAll(categoriaNome?: string): Promise<Loja[]> {
+        
+        const whereClause: Prisma.LojaWhereInput = {};
+        //filtra busca por categoria
+        if (categoriaNome) {
+            const catEnum = categoriaNome.toUpperCase() as CategoriasNome;
+            
+            // Verifica se é uma categoria válida do Enum
+            if (Object.values(CategoriasNome).includes(catEnum)) {
+                whereClause.categoria = {
+                    nome: catEnum
+                };
+            }
+        }
+
         return this.prisma.loja.findMany({
+            where: whereClause,
             include: { // Inclui dados relacionados para enriquecer a resposta
                 categoria: true, // Dados da categoria associada
                 usuario: { select: { id: true, nome: true, userName: true } } // Dados selecionados do usuário dono
