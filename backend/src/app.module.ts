@@ -7,10 +7,11 @@ import { PrismaModule } from './database/prisma.module';
 import { LojaModule } from './loja/loja.module';
 import { ProdutoModule } from './produto/produto.module';
 import { AuthModule } from './auth/auth.module';
+import { CategoriaModule } from './categoria/categoria.module';
 
 
 @Module({
-  imports: [UsuarioModule, ConfigModule.forRoot({ isGlobal: true }), PrismaModule, LojaModule, ProdutoModule, AuthModule],
+  imports: [UsuarioModule, ConfigModule.forRoot({ isGlobal: true }), PrismaModule, LojaModule, ProdutoModule, AuthModule, CategoriaModule],
   controllers: [AppController],
   providers: [AppService],
 })

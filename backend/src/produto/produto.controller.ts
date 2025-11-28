@@ -19,7 +19,7 @@ import { ProdutoService } from './produto.service';
 import { CreateProdutoDto } from './dto/create-produto.dto';
 import { UpdateProdutoDto } from './dto/update-produto.dto';
 import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
-import { Produto } from '../../generated/prisma';
+import { Produto } from '@prisma/client';
 import { use } from 'passport';
 
 // Helper: pega o ID do usuário do token (ajuste aqui se no seu token for "user.id")
