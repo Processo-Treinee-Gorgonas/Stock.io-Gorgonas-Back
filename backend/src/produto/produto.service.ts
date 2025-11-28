@@ -11,7 +11,7 @@ import { CategoriasNome, Produto, Prisma } from '@prisma/client';
 
 @Injectable()
 export class ProdutoService {
-  constructor(private prisma: PrismaService) {}
+  constructor(private prisma: PrismaService) { }
 
   // Cria um novo produto associado a uma loja do usuário
   async create(data: CreateProdutoDto, userId: number): Promise<Produto> {
@@ -143,7 +143,7 @@ export class ProdutoService {
             id: true,
             nome: true,
             logo: true,
-            usuarioId: true 
+            usuarioId: true
           }
         },
         imagens: true,
@@ -184,26 +184,26 @@ export class ProdutoService {
       },
     });
   }
-  async findAllFromStore(lojaId:number){
+  async findAllFromStore(lojaId: number) {
     return this.prisma.produto.findMany({
       //Filtra pela lojaId
       where: {
         lojaId: lojaId,
       },
-      
+
       //Seleciona SÓ o que o ProductCard precisa (leve e rápido)
       select: {
         id: true,
         nome: true,
         preco: true,
         estoque: true,
-        loja: { 
-          select: { 
+        loja: {
+          select: {
             logo: true,
-          } 
+          }
         },
         imagens: {
-          take: 1, 
+          take: 1,
           orderBy: { ordem: 'asc' },
           select: { urlImagem: true }
         }
@@ -211,8 +211,8 @@ export class ProdutoService {
     });
   }
 
-  async ProcurarPorCategoria(slug: string,options?: { orderBy?: 'rating' | 'recentes' }) {
-    
+  async ProcurarPorCategoria(slug: string, options?: { orderBy?: 'rating' | 'recentes' }) {
+
     const nomeDaCategoria = slug.toUpperCase() as CategoriasNome;
 
     let orderByClause: any = { id: 'desc' }; // Padrão
@@ -228,8 +228,8 @@ export class ProdutoService {
         subcategoria: { categoria: { nome: nomeDaCategoria } }
       },
       orderBy: orderByClause,
-      take: 10, 
-      
+      take: 10,
+
       select: {
         id: true,
         nome: true,
@@ -237,7 +237,7 @@ export class ProdutoService {
         estoque: true,
         loja: { select: { logo: true } },
         imagens: {
-          take: 1, 
+          take: 1,
           orderBy: { ordem: 'asc' },
           select: { urlImagem: true }
         },
@@ -248,10 +248,11 @@ export class ProdutoService {
 
   async PorCategoriaPage(
     slug: string,
-    options?: { 
-      orderBy?: 'rating' | 'recentes' | 'preco' | 'id', 
-      limit?: number, 
-      page?: number 
+    options?: {
+      orderBy?: 'rating' | 'recentes' | 'preco' | 'id',
+      limit?: number,
+      page?: number,
+      subcategoriaId?: number
     }
   ) {
     const nomeDaCategoria = slug.toUpperCase() as CategoriasNome;
@@ -270,18 +271,24 @@ export class ProdutoService {
       orderByClause = { createdAt: 'desc' };
     } else if (options?.orderBy === 'preco') {
       orderByClause = { preco: 'asc' };
-    } else{
+    } else {
       orderByClause = { id: 'desc' };
     }
 
+    const whereClause: any = {
+      subcategoria: { categoria: { nome: nomeDaCategoria } }
+    };
+
+    if (options?.subcategoriaId) {
+      whereClause.subcategoriaId = options.subcategoriaId;
+    }
+    
     const produtosPromise = this.prisma.produto.findMany({
-      where: {
-        subcategoria: { categoria: { nome: nomeDaCategoria } }
-      },
+      where: whereClause,
       orderBy: orderByClause,
       take: limit,
       skip: skip,
-      
+
       select: {
         id: true,
         nome: true,
@@ -289,7 +296,7 @@ export class ProdutoService {
         estoque: true,
         loja: { select: { logo: true } },
         imagens: {
-          take: 1, 
+          take: 1,
           orderBy: { ordem: 'asc' },
           select: { urlImagem: true }
         },
@@ -298,10 +305,8 @@ export class ProdutoService {
     });
 
     // Contagem Total
-    const totalProdutosPromise = this.prisma.produto.count({
-       where: {
-        subcategoria: { categoria: { nome: nomeDaCategoria } }
-      },
+   const totalProdutosPromise = this.prisma.produto.count({
+       where: whereClause, // Usa a mesma cláusula de filtro
     });
 
     const [produtos, totalCount] = await Promise.all([
@@ -325,7 +330,7 @@ export class ProdutoService {
         estoque: true,
         loja: { select: { logo: true } },
         imagens: {
-          take: 1, 
+          take: 1,
           orderBy: { ordem: 'asc' },
           select: { urlImagem: true }
         }
@@ -344,8 +349,8 @@ export class ProdutoService {
   //Função de pesquisa 
   async search(query: string, categoriaNome?: string) {
     const orConditions: Prisma.ProdutoWhereInput[] = [
-       { nome: { contains: query, mode: 'insensitive' } },
-       { loja: { nome: { contains: query, mode: 'insensitive' } } },
+      { nome: { contains: query, mode: 'insensitive' } },
+      { loja: { nome: { contains: query, mode: 'insensitive' } } },
     ];
     const queryAsCategoria = query.toUpperCase() as CategoriasNome;
     if (Object.values(CategoriasNome).includes(queryAsCategoria)) {
@@ -359,11 +364,11 @@ export class ProdutoService {
     };
     if (categoriaNome) {
       const catEnum = categoriaNome.toUpperCase() as CategoriasNome;
-      
+
       if (Object.values(CategoriasNome).includes(catEnum)) {
         whereClause.subcategoria = {
           categoria: {
-            nome: catEnum 
+            nome: catEnum
           }
         };
       }
@@ -377,7 +382,7 @@ export class ProdutoService {
         estoque: true,
         loja: { select: { logo: true } },
         imagens: {
-          take: 1, 
+          take: 1,
           orderBy: { ordem: 'asc' },
           select: { urlImagem: true }
         }

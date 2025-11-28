@@ -136,8 +136,9 @@ export class ProdutoController {
     @Query('ordenar') ordenar?: string,
     @Query('limit', new DefaultValuePipe('15'), ParseIntPipe) limit?: number,
     @Query('page', new DefaultValuePipe('1'), ParseIntPipe) page?: number,
+    @Query('subcategoriaId') subcategoriaId?: string,
   ) {
-    const options: any = { limit, page };
+    const options: any = { limit, page, subcategoriaId: subcategoriaId ? parseInt(subcategoriaId) : undefined};
 
     if (ordenar === 'avaliacoes') options.orderBy = 'rating';
     else if (ordenar === 'recentes') options.orderBy = 'recentes';
