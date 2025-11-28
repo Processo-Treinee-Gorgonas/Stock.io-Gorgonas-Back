@@ -40,13 +40,13 @@ export class AvaliacaoLojaService {
     if (!loja) throw new NotFoundException(`Loja com ID ${lojaId} não encontrada.`);
     if (loja.usuarioId === userId) throw new ForbiddenException('Donos não podem avaliar a própria loja.');
 
-    // Garante 1 avaliação por usuário/loja (a constraint já existe, mas validamos de forma amigável)
+    // Garante 1 avaliação por usuário/loja (mensagem amigável)
     const jaExiste = await this.prisma.avaliacaoLoja.findUnique({
       where: { usuarioId_lojaId: { usuarioId: userId, lojaId } },
     }).catch(() => null);
     if (jaExiste) throw new ConflictException('Você já avaliou esta loja.');
 
-    // Arredonda meios para inteiro do schema
+    // Arredonda para inteiro conforme schema
     const notaInt = Math.round(dto.nota);
     const created = await this.prisma.avaliacaoLoja.create({
       data: { lojaId, usuarioId: userId, conteudo: dto.conteudo, nota: notaInt },
