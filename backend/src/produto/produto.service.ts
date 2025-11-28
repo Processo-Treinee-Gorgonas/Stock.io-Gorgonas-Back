@@ -186,12 +186,12 @@ export class ProdutoService {
   }
   async findAllFromStore(lojaId:number){
     return this.prisma.produto.findMany({
-      // 1. Filtra pela lojaId
+      //Filtra pela lojaId
       where: {
         lojaId: lojaId,
       },
       
-      // 2. Seleciona SÓ o que o ProductCard precisa (leve e rápido)
+      //Seleciona SÓ o que o ProductCard precisa (leve e rápido)
       select: {
         id: true,
         nome: true,
@@ -211,46 +211,109 @@ export class ProdutoService {
     });
   }
 
-  async ProcurarPorCategoria(slug: string) {
-    const nomeDaCategoria = slug.toUpperCase() as CategoriasNome;
-    return this.prisma.produto.findMany({
+  async ProcurarPorCategoria(slug: string,options?: { orderBy?: 'rating' | 'recentes' }) {
     
-      //Filtra por caegoria
+    const nomeDaCategoria = slug.toUpperCase() as CategoriasNome;
+
+    let orderByClause: any = { id: 'desc' }; // Padrão
+
+    if (options?.orderBy === 'rating') {
+      orderByClause = { avaliacoes: { _count: 'desc' } };
+    } else if (options?.orderBy === 'recentes') {
+      orderByClause = { createdAt: 'desc' };
+    }
+
+    return this.prisma.produto.findMany({
       where: {
-        subcategoria: {
-          categoria: { 
-            nome: nomeDaCategoria
-          }
-        }
+        subcategoria: { categoria: { nome: nomeDaCategoria } }
       },
-
-
+      orderBy: orderByClause,
+      take: 10, 
+      
       select: {
         id: true,
         nome: true,
         preco: true,
         estoque: true,
-        
-        loja: { 
-          select: { 
-            logo: true,
-          } 
-        },
-
+        loja: { select: { logo: true } },
         imagens: {
           take: 1, 
           orderBy: { ordem: 'asc' },
           select: { urlImagem: true }
-        }
-
+        },
+        avaliacoes: { select: { nota: true } }
       }
     });
   }
 
-  async listarProdutos(page: number, limit: number) {
-    
+  async PorCategoriaPage(
+    slug: string,
+    options?: { 
+      orderBy?: 'rating' | 'recentes' | 'preco' | 'id', 
+      limit?: number, 
+      page?: number 
+    }
+  ) {
+    const nomeDaCategoria = slug.toUpperCase() as CategoriasNome;
+
+    //Paginação
+    const page = options?.page || 1;
+    const limit = options?.limit || 15;
     const skip = (page - 1) * limit;
 
+    //Ordenação
+    let orderByClause: any = { id: 'desc' };
+
+    if (options?.orderBy === 'rating') {
+      orderByClause = { avaliacoes: { _count: 'desc' } };
+    } else if (options?.orderBy === 'recentes') {
+      orderByClause = { createdAt: 'desc' };
+    } else if (options?.orderBy === 'preco') {
+      orderByClause = { preco: 'asc' };
+    } else{
+      orderByClause = { id: 'desc' };
+    }
+
+    const produtosPromise = this.prisma.produto.findMany({
+      where: {
+        subcategoria: { categoria: { nome: nomeDaCategoria } }
+      },
+      orderBy: orderByClause,
+      take: limit,
+      skip: skip,
+      
+      select: {
+        id: true,
+        nome: true,
+        preco: true,
+        estoque: true,
+        loja: { select: { logo: true } },
+        imagens: {
+          take: 1, 
+          orderBy: { ordem: 'asc' },
+          select: { urlImagem: true }
+        },
+        avaliacoes: { select: { nota: true } }
+      }
+    });
+
+    // Contagem Total
+    const totalProdutosPromise = this.prisma.produto.count({
+       where: {
+        subcategoria: { categoria: { nome: nomeDaCategoria } }
+      },
+    });
+
+    const [produtos, totalCount] = await Promise.all([
+      produtosPromise,
+      totalProdutosPromise
+    ]);
+
+    return { produtos, totalCount };
+  }
+
+  async listarProdutos(page: number, limit: number) {
+    const skip = (page - 1) * limit;
     const produtosPromise = this.prisma.produto.findMany({
       orderBy: { id: 'desc' },
       take: limit,
@@ -278,47 +341,41 @@ export class ProdutoService {
 
     return { produtos, totalCount };
   }
-  async search(query: string) {
+  //Função de pesquisa 
+  async search(query: string, categoriaNome?: string) {
     const orConditions: Prisma.ProdutoWhereInput[] = [
-      {
-        nome: {
-          contains: query,
-          mode: 'insensitive', 
-        },
-      },
-      {
-        loja: {
-          nome: {
-            contains: query,
-            mode: 'insensitive',
-          },
-        },
-      },
+       { nome: { contains: query, mode: 'insensitive' } },
+       { loja: { nome: { contains: query, mode: 'insensitive' } } },
     ];
     const queryAsCategoria = query.toUpperCase() as CategoriasNome;
     if (Object.values(CategoriasNome).includes(queryAsCategoria)) {
       orConditions.push({
-        subcategoria: {
-          categoria: {
-            nome: queryAsCategoria,
-          },
-        },
+        subcategoria: { categoria: { nome: queryAsCategoria } },
       });
     }
+
+    const whereClause: Prisma.ProdutoWhereInput = {
+      OR: orConditions,
+    };
+    if (categoriaNome) {
+      const catEnum = categoriaNome.toUpperCase() as CategoriasNome;
+      
+      if (Object.values(CategoriasNome).includes(catEnum)) {
+        whereClause.subcategoria = {
+          categoria: {
+            nome: catEnum 
+          }
+        };
+      }
+    }
     return this.prisma.produto.findMany({
-      where: {
-        OR: orConditions, // Usa a lista de condições
-      },
+      where: whereClause,
       select: {
         id: true,
         nome: true,
         preco: true,
         estoque: true,
-        loja: { 
-          select: { 
-            logo: true,
-          } 
-        },
+        loja: { select: { logo: true } },
         imagens: {
           take: 1, 
           orderBy: { ordem: 'asc' },

@@ -91,11 +91,11 @@ export class ProdutoController {
 
   // ROTA DA SEARCHBAR
   @Get('buscar')
-  async search(@Query('q') query: string) {
+  async search(@Query('q') query: string, @Query('categoria') categoria?: string) {
     if (!query) {
       return []; // Retorna vazio se a busca for vazia
     }
-    return this.produtoService.search(query);
+    return this.produtoService.search(query, categoria);
   }
   // BUSCAR produto pelo ID (GET /produtos/:id) – rota pública
   @Get(':id')
@@ -113,14 +113,37 @@ export class ProdutoController {
       throw new ForbiddenException('ID do usuário inválido ou não encontrado no token.');
     }
     await this.produtoService.delete(id, userId);
-    // Sem corpo de resposta (204), igual ao padrão do controller de loja
   }
 
   @Get('ver-mais/:slug')
   async ProcurarPorCategoria(
     @Param('slug') slug: string,
+    @Query('ordenar') ordenar?: string
   ) {
-    return this.produtoService.ProcurarPorCategoria(slug  );
+    const options: any = {};
+
+    if (ordenar === 'avaliacoes') {
+      options.orderBy = 'rating';
+    }else if (ordenar === 'createdAt'){
+      options.orderBy = 'createdAt'
+    }
+    return this.produtoService.ProcurarPorCategoria(slug, options);
   }
 
+  @Get('categoria/:slug')
+  async PorCategoriaPage(
+    @Param('slug') slug: string,
+    @Query('ordenar') ordenar?: string,
+    @Query('limit', new DefaultValuePipe('15'), ParseIntPipe) limit?: number,
+    @Query('page', new DefaultValuePipe('1'), ParseIntPipe) page?: number,
+  ) {
+    const options: any = { limit, page };
+
+    if (ordenar === 'avaliacoes') options.orderBy = 'rating';
+    else if (ordenar === 'recentes') options.orderBy = 'recentes';
+    else if (ordenar === 'preco') options.orderBy = 'preco';
+    else if (ordenar === 'id') options.orderBy = 'id';
+
+    return this.produtoService.PorCategoriaPage(slug, options);
+  }
 }
