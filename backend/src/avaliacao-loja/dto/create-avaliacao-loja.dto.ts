@@ -1,13 +1,14 @@
-import { IsInt, IsNotEmpty, IsOptional, IsString, Max, Min } from 'class-validator';
+import { IsNotEmpty, IsOptional, IsString, Max, Min } from 'class-validator';
+import { Type } from 'class-transformer';
 
 export class CreateAvaliacaoLojaDto {
   @IsNotEmpty()
   @IsString()
   conteudo: string;
 
-  // Aceitaremos número, mas o schema é Int; o service arredonda 0.5
   @IsNotEmpty()
-  @Min(1)
+  @Type(() => Number)
+  @Min(0.5)
   @Max(5)
   nota: number;
 }

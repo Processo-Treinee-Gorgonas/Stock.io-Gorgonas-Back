@@ -48,10 +48,9 @@ export class AvaliacaoLojaService {
     }).catch(() => null);
     if (jaExiste) throw new ConflictException('Você já avaliou esta loja.');
 
-    // Arredonda para inteiro conforme schema
-    const notaInt = Math.round(dto.nota);
+    const notaDec = Number(dto.nota);
     const created = await this.prisma.avaliacaoLoja.create({
-      data: { lojaId, usuarioId: userId, conteudo: dto.conteudo, nota: notaInt },
+      data: { lojaId, usuarioId: userId, conteudo: dto.conteudo, nota: notaDec },
     });
     return created;
   }
@@ -75,11 +74,11 @@ export class AvaliacaoLojaService {
     const avaliacao = await this.prisma.avaliacaoLoja.findUnique({ where: { id: avaliacaoId } });
     if (!avaliacao || avaliacao.lojaId !== lojaId) throw new NotFoundException('Avaliação não encontrada.');
     if (avaliacao.usuarioId !== userId) throw new ForbiddenException('Você não pode editar esta avaliação.');
-    const notaInt = dto.nota !== undefined ? Math.round(dto.nota) : undefined;
+    const notaDec = dto.nota !== undefined ? Number(dto.nota) : undefined;
     const updated = await this.prisma.avaliacaoLoja.update({
       where: { id: avaliacaoId },
       data: {
-        nota: notaInt !== undefined ? notaInt : avaliacao.nota,
+        nota: notaDec !== undefined ? notaDec : avaliacao.nota,
         conteudo: dto.conteudo !== undefined ? dto.conteudo : avaliacao.conteudo,
       },
     });

@@ -1,8 +1,10 @@
 import { IsNotEmpty, IsOptional, IsString, Max, Min } from 'class-validator';
+import { Type } from 'class-transformer';
 
 export class UpdateAvaliacaoLojaDto {
   @IsOptional()
-  @Min(1)
+  @Type(() => Number)
+  @Min(0.5)
   @Max(5)
   nota?: number;
 
