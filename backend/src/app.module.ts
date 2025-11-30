@@ -8,10 +8,11 @@ import { LojaModule } from './loja/loja.module';
 import { ProdutoModule } from './produto/produto.module';
 import { AuthModule } from './auth/auth.module';
 import { CategoriaModule } from './categoria/categoria.module';
+import { AvaliacaoLojaModule } from './avaliacao-loja/avaliacao-loja.module';
 
 
 @Module({
-  imports: [UsuarioModule, ConfigModule.forRoot({ isGlobal: true }), PrismaModule, LojaModule, ProdutoModule, AuthModule, CategoriaModule],
+  imports: [UsuarioModule, ConfigModule.forRoot({ isGlobal: true }), PrismaModule, LojaModule, ProdutoModule, AuthModule, CategoriaModule, AvaliacaoLojaModule],
   controllers: [AppController],
   providers: [AppService],
 })
