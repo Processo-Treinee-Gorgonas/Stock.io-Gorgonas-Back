@@ -23,13 +23,11 @@ export class UsuarioController {
         return this.usuarioService.update(id, data);
     }
 
-    @UseGuards(JwtAuthGuard)
     @Get()
     findAll() {
         return this.usuarioService.findAll();
     }
 
-    @UseGuards(JwtAuthGuard)
     @Get(':id')
     findOne(
         @Param('id', ParseIntPipe) id: number

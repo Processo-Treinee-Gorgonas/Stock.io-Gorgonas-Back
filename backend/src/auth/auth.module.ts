@@ -26,7 +26,7 @@ import { LocalAuthGuard } from './guards/local-auth.guard';
       inject: [ConfigService],
       useFactory: (configService: ConfigService) => ({
         secret: configService.get<string>('JWT_SECRET'),
-        signOptions: { expiresIn: '1h' }, // Tokens expiram em 1 hora
+        signOptions: { expiresIn: '12h' }, // Tokens expiram em 12 horas
       }),
     }),
   ],
