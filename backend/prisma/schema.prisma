@@ -32,7 +32,7 @@ model Loja {
   usuarioId Int
   categoriaId Int
   nome String @db.VarChar(255) @unique
-  descricao String @db.Text
+  descricao String? @db.Text
   logo String?
   banner String?
   sticker String?

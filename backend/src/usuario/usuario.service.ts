@@ -4,6 +4,7 @@ import { UpdateUsuarioDto } from './dto/update-usuario.dto';
 import { PrismaService } from '../database/prisma.service';
 import { Usuario } from '@prisma/client';
 import * as bcrypt from 'bcrypt';
+import { UpdateSenhaDto } from './dto/update-senha.dto';
 
 @Injectable()
 export class UsuarioService {
@@ -54,20 +55,6 @@ export class UsuarioService {
             throw new NotFoundException('Usuário não encontrado.');
         }
 
-        let senhaHash: string | undefined = undefined
-
-        if (data.senha) {
-
-            if (data.senha !== data.confirmarSenha) {
-                throw new BadRequestException('A senha e a confirmação de senha não coincidem.');
-            }
-
-            senhaHash = await bcrypt.hash(data.senha, 10);
-        }
-
-        delete data.senha;
-        delete data.confirmarSenha;
-
         const usuarioAtualizado = await this.prisma.usuario.update({
             where: { id: id },
             data: {
@@ -75,6 +62,37 @@ export class UsuarioService {
                 nome: data.nome,
                 email: data.email,
                 fotoPerfil: data.fotoPerfil,
+            },
+        });
+
+        delete (usuarioAtualizado as any).senhaHash;
+        return usuarioAtualizado;
+    }
+
+    async updateSenha(id:number, data:  UpdateSenhaDto) {
+        
+        const usuarioExistente = await this.prisma.usuario.findUnique({
+            where: { id: id },
+        });
+
+        if (!usuarioExistente) {
+            throw new NotFoundException('Usuário não encontrado.');
+        }
+
+        let senhaHash: string | undefined = undefined
+
+        let senhaValida = await bcrypt.compare(data.senhaAntiga, usuarioExistente.senhaHash);
+        if (!senhaValida) {
+            throw new BadRequestException('Senha antiga incorreta.');
+        }
+
+        if (data.novaSenha) {
+            senhaHash = await bcrypt.hash(data.novaSenha, 10);
+        }
+
+        const usuarioAtualizado = await this.prisma.usuario.update({
+            where: { id: id },
+            data: {
                 senhaHash: senhaHash,
             },
         });

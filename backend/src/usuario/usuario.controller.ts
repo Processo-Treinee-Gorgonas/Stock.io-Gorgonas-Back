@@ -3,6 +3,7 @@ import { UsuarioService } from './usuario.service';
 import { CreateUsuarioDto } from './dto/create-usuario.dto';
 import { UpdateUsuarioDto } from './dto/update-usuario.dto';
 import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
+import { UpdateSenhaDto } from './dto/update-senha.dto';
 
 @Controller('usuario')
 export class UsuarioController {
@@ -21,6 +22,15 @@ export class UsuarioController {
         @Body() data: UpdateUsuarioDto
     ) {
         return this.usuarioService.update(id, data);
+    }
+
+    @UseGuards(JwtAuthGuard)
+    @Patch('senha/:id')
+    updateSenha(
+        @Param('id', ParseIntPipe) id: number,
+        @Body() data: UpdateSenhaDto
+    ) {
+        return this.usuarioService.updateSenha(id, data);
     }
 
     @Get()
