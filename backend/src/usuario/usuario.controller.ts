@@ -53,4 +53,12 @@ export class UsuarioController {
         return this.usuarioService.delete(id);
     }
 
+
+    @Get('avaliacoes/:id')
+    listarAvaliacoes(
+        @Param('id', ParseIntPipe) id: number
+    ) {
+        return this.usuarioService.listarAvaliacoes(id);
+    }
+
 }

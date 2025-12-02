@@ -144,4 +144,28 @@ export class UsuarioService {
             where: { id: id },
         });
     }
+
+    async listarAvaliacoes(id: number) {
+
+        if (!await this.prisma.usuario.findUnique({ where: { id: id } })) {
+            throw new NotFoundException('Usuário não encontrado.');
+        }
+
+        const usuarioAvaliacoes = await this.prisma.usuario.findUnique({
+            where: { id: id },
+            select: {
+                nome: true,
+                fotoPerfil: true,
+                avaliacoesLoja: {
+                    select: {
+                        id: true,
+                        nota: true,
+                        conteudo: true,
+                    },
+                },
+            },
+        });
+
+        return usuarioAvaliacoes;
+    }
 }
