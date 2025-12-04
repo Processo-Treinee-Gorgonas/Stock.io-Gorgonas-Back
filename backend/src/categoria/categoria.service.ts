@@ -39,4 +39,16 @@ export class CategoriaService {
 
     return categoria;
   }
+
+  async findAll() {
+    return this.prisma.categoria.findMany({
+      orderBy: { nome: 'asc' },
+      include: {
+        subcategorias: {
+          orderBy: { nome: 'asc' }
+        }
+      }
+    });
+  }
+
 }

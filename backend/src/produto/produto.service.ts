@@ -246,6 +246,34 @@ export class ProdutoService {
     });
   }
 
+  async ProcurarPorUsuario(id: number) {
+    
+    const idDoUsuario = id;
+
+    return this.prisma.produto.findMany({
+      where: {
+        loja: { usuarioId: idDoUsuario }
+      },
+      orderBy: { id: 'desc' },
+      take: 15, 
+      
+      select: {
+        id: true,
+        nome: true,
+        preco: true,
+        estoque: true,
+        loja: { select: { logo: true } },
+        imagens: {
+          take: 1, 
+          orderBy: { ordem: 'asc' },
+          select: { urlImagem: true }
+        },
+        avaliacoes: { select: { nota: true } }
+      }
+    });
+  }
+
+
   async PorCategoriaPage(
     slug: string,
     options?: { 

@@ -26,4 +26,9 @@ export class CategoriaController {
       return this.lojaService.findOneByName(categoria);
     }
 
+    @Get()
+    async findAll(): Promise<Categoria[]> {
+      return this.lojaService.findAll();
+    }
+
 }

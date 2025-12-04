@@ -2,7 +2,7 @@ import { Injectable, NotFoundException, ForbiddenException, ConflictException } 
 import { CreateLojaDto } from './dto/create-loja.dto';
 import { UpdateLojaDto } from './dto/update-loja.dto';
 import { PrismaService } from '../database/prisma.service'; // Importa o serviço Prisma configurado
-import { CategoriasNome, Loja, Prisma } from '../../generated/prisma/client';
+import { CategoriasNome, Loja, Prisma } from '@prisma/client';
 
 @Injectable()
 export class LojaService {
@@ -148,6 +148,22 @@ export class LojaService {
         return this.prisma.loja.findMany({
             where: { usuarioId: userId }, // Filtra pelo ID do usuário
             include: { categoria: true } // Inclui dados da categoria
+        });
+    }
+
+    async encontrarPorUsuario(id: number){
+      
+        return this.prisma.loja.findMany({
+            where: { usuarioId: id },
+            select: { 
+                id: true,
+                nome: true,
+                descricao: true,
+                logo: true,
+                categoria: { 
+                    select: { nome: true } 
+                },
+            }
         });
     }
 }
