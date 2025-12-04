@@ -11,6 +11,8 @@ CREATE TABLE "Usuario" (
     "fotoPerfil" TEXT,
     "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
     "updatedAt" TIMESTAMP(3) NOT NULL,
+    "resetPasswordToken" VARCHAR(255),
+    "resetPasswordExpires" TIMESTAMP(3),
 
     CONSTRAINT "Usuario_pkey" PRIMARY KEY ("id")
 );
@@ -21,7 +23,7 @@ CREATE TABLE "Loja" (
     "usuarioId" INTEGER NOT NULL,
     "categoriaId" INTEGER NOT NULL,
     "nome" VARCHAR(255) NOT NULL,
-    "descricao" TEXT NOT NULL,
+    "descricao" TEXT,
     "logo" TEXT,
     "banner" TEXT,
     "sticker" TEXT,

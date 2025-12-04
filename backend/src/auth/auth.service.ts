@@ -1,5 +1,5 @@
 // src/auth/auth.service.ts
-import { Injectable, UnauthorizedException } from '@nestjs/common';
+import { Injectable, UnauthorizedException, NotFoundException } from '@nestjs/common';
 import { UsuarioService } from '../usuario/usuario.service';
 import { JwtService } from '@nestjs/jwt';
 import * as bcrypt from 'bcrypt';
@@ -7,53 +7,99 @@ import * as bcrypt from 'bcrypt';
 @Injectable()
 export class AuthService {
   constructor(
-    // Injeta o serviço que fala com a tabela 'Usuario'
-    private usuarioService: UsuarioService, 
-    // Injeta o serviço que "assina" e cria o JWT
+    private usuarioService: UsuarioService,
     private jwtService: JwtService,
   ) {}
 
   /**
-   * Esta é a função que o 'LocalStrategy' chama.
-   * Ela é o "cérebro" da validação.
+   * Validação usada pela LocalStrategy
    */
   async validateUser(email: string, pass: string): Promise<any> {
     let usuario;
     try {
-      // 1. Busca o usuário no banco (com a senhaHash!)
-      //    (O 'findOneByEmail' é uma função que você já tem no seu UsuarioService)
-      usuario = await this.usuarioService.findOneByEmail(email); 
+      usuario = await this.usuarioService.findOneByEmail(email);
     } catch (error) {
-      // Se 'findOneByEmail' falhar (ex: NotFound), as credenciais são inválidas
       throw new UnauthorizedException('E-mail ou senha inválidos.');
     }
 
-    // 2. Compara a senha enviada (pass) com o hash salvo no banco (usuario.senhaHash)
     if (usuario && (await bcrypt.compare(pass, usuario.senhaHash))) {
-      const { senhaHash, ...result } = usuario; // 3. Remove o hash da resposta
-      return result; // 4. Retorna o objeto do usuário (sem o hash)
+      const { senhaHash, ...result } = usuario;
+      return result;
     }
 
-    // 5. Se a senha não bater, retorna nulo (a LocalStrategy vai tratar)
     return null;
   }
 
   /**
-   * Esta função é chamada pelo 'AuthController' DEPOIS que o
-   * usuário foi validado com sucesso.
-   * Ela cria o Token JWT.
+   * Gera token JWT para login
    */
   async login(usuario: any) {
-    // O 'usuario' que recebemos aqui é o 'result' da função 'validateUser'
-    const payload = { 
-      email: usuario.email, 
-      sub: usuario.id, // 'sub' (subject) é o nome padrão para o ID do usuário no JWT
+    const payload = {
+      email: usuario.email,
+      sub: usuario.id,
       nome: usuario.nome,
     };
-    
-    // "Assina" o payload com o seu JWT_SECRET e retorna o token
+
     return {
       access_token: this.jwtService.sign(payload),
     };
+  }
+
+  // ---------------------------------------------------------
+  // 🔵 FUNÇÃO 1 — Início da recuperação de senha
+  // Front chama POST /auth/forgot-password
+  // ---------------------------------------------------------
+  async forgotPassword(email: string) {
+    const usuario = await this.usuarioService.findOneByEmail(email).catch(() => null);
+
+    // Mesmo que o email não exista, respondemos igual
+    if (!usuario) {
+      return { message: 'Se este email existir, enviaremos instruções.' };
+    }
+
+    // Token JWT válido por 15 minutos
+    const token = this.jwtService.sign(
+      { sub: usuario.id, email: usuario.email },
+      { expiresIn: '15m' },
+    );
+
+    console.log('🔐 Token de redefinição gerado:', token);
+
+    // Não estamos enviando e-mail ainda, apenas devolvendo token para teste
+    return {
+      message: 'Token gerado com sucesso.',
+      token,
+    };
+  }
+
+  // ---------------------------------------------------------
+  // 🔵 FUNÇÃO 2 — Finalização da redefinição
+  // Front chama POST /auth/reset-password
+  // ---------------------------------------------------------
+  async resetPassword(token: string, novaSenha: string) {
+    let payload;
+
+    // Valida token
+    try {
+      payload = this.jwtService.verify(token);
+    } catch (err) {
+      throw new UnauthorizedException('Token inválido ou expirado.');
+    }
+
+    // Busca usuário
+    const usuario = await this.usuarioService.findOne(payload.sub);
+
+    if (!usuario) {
+      throw new NotFoundException('Usuário não encontrado.');
+    }
+
+    // Gera novo hash
+    const salt = await bcrypt.genSalt();
+    const novaSenhaHash = await bcrypt.hash(novaSenha, salt);
+
+    // Atualiza senha usando função criada
+    await this.usuarioService.updateSenhaDireta(usuario.id, novaSenhaHash);
+
+    return { message: 'Senha redefinida com sucesso!' };
   }
 }

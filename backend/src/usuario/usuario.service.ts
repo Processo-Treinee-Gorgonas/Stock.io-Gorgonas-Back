@@ -123,15 +123,16 @@ export class UsuarioService {
         delete (usuario as any).senhaHash;
         return usuario;
     }
+
     async findOneByEmail(email: string): Promise<Usuario | null> {
         return this.prisma.usuario.findUnique({
-        where: {
-            email: email,
-        },
+            where: {
+                email: email,
+            },
         });
     }
-    async delete(id: number) {
 
+    async delete(id: number) {
         const usuarioExistente = await this.prisma.usuario.findUnique({
             where: { id: id },
         });
@@ -146,7 +147,6 @@ export class UsuarioService {
     }
 
     async listarAvaliacoes(id: number) {
-
         if (!await this.prisma.usuario.findUnique({ where: { id: id } })) {
             throw new NotFoundException('Usuário não encontrado.');
         }
@@ -167,5 +167,24 @@ export class UsuarioService {
         });
 
         return usuarioAvaliacoes;
+    }
+
+ // função nova para recuperar senha 
+    async updateSenhaDireta(id: number, novaSenhaHash: string) {
+        const usuarioExistente = await this.prisma.usuario.findUnique({
+            where: { id },
+        });
+
+        if (!usuarioExistente) {
+            throw new NotFoundException('Usuário não encontrado.');
+        }
+
+        const usuarioAtualizado = await this.prisma.usuario.update({
+            where: { id },
+            data: { senhaHash: novaSenhaHash },
+        });
+
+        delete (usuarioAtualizado as any).senhaHash;
+        return usuarioAtualizado;
     }
 }

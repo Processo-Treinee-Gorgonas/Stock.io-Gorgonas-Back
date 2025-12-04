@@ -25,6 +25,8 @@ model Usuario {
   comentariosAvaliacaoLoja ComentarioAvaliacaoLoja []
   avaliacoesProduto AvaliacaoProduto[]
   comentariosAvaliacaoProduto ComentarioAvaliacaoProduto []
+  resetPasswordToken   String?   @db.VarChar(255)
+  resetPasswordExpires DateTime?
 }
 
 model Loja {
