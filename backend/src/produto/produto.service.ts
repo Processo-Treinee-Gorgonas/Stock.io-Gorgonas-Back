@@ -135,7 +135,11 @@ export class ProdutoService {
     return this.prisma.produto.findMany({
       include: {
         subcategoria: true,
-        loja: { select: { id: true, nome: true } },
+        loja: {
+          select: {
+            id: true, nome: true, sticker: true, logo: true
+          }
+        },
       },
     });
   }
@@ -150,6 +154,7 @@ export class ProdutoService {
           select: {
             id: true,
             nome: true,
+            sticker: true,
             logo: true,
             usuarioId: true
           }
@@ -208,6 +213,7 @@ export class ProdutoService {
         loja: {
           select: {
             logo: true,
+            sticker: true
           }
         },
         imagens: {
@@ -243,7 +249,7 @@ export class ProdutoService {
         nome: true,
         preco: true,
         estoque: true,
-        loja: { select: { logo: true } },
+        loja: { select: { sticker: true } },
         imagens: {
           take: 1,
           orderBy: { ordem: 'asc' },
@@ -295,7 +301,7 @@ export class ProdutoService {
         nome: true,
         preco: true,
         estoque: true,
-        loja: { select: { logo: true } },
+        loja: { select: { logo: true, sticker: true } },
         imagens: {
           take: 1,
           orderBy: { ordem: 'asc' },
@@ -331,7 +337,7 @@ export class ProdutoService {
         nome: true,
         preco: true,
         estoque: true,
-        loja: { select: { logo: true } },
+        loja: { select: { logo: true, sticker: true } },
         imagens: {
           take: 1,
           orderBy: { ordem: 'asc' },
@@ -383,7 +389,7 @@ export class ProdutoService {
         nome: true,
         preco: true,
         estoque: true,
-        loja: { select: { logo: true } },
+        loja: { select: { logo: true, sticker: true } },
         imagens: {
           take: 1,
           orderBy: { ordem: 'asc' },
