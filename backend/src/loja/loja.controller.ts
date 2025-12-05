@@ -95,6 +95,10 @@ export class LojaController {
       data.categoriaId = Number(body.categoriaId);
     }
 
+    if (body.removerLogo === 'true') data.logo = '/';
+    if (body.removerBanner === 'true') data.banner = '/';
+    if (body.removerPerfil === 'true') data.sticker = '/';
+
     if (files?.logo?.[0]) {
       data.logo = files.logo[0].path;
     }
