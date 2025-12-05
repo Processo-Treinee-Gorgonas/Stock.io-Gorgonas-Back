@@ -25,6 +25,7 @@ model Usuario {
   comentariosAvaliacaoLoja ComentarioAvaliacaoLoja []
   avaliacoesProduto AvaliacaoProduto[]
   comentariosAvaliacaoProduto ComentarioAvaliacaoProduto []
+  notificacoes Notificacao[]
 }
 
 model Loja {
@@ -144,4 +145,15 @@ model ComentarioAvaliacaoProduto {
   updatedAt DateTime @updatedAt
   usuario Usuario @relation(fields: [usuarioId], references: [id], onDelete: Cascade, onUpdate: Cascade)
   avaliacaoProduto AvaliacaoProduto @relation(fields: [avaliacaoProdutoId], references: [id], onDelete: Cascade, onUpdate: Cascade)
+}
+
+model Notificacao {
+  id        Int      @id @default(autoincrement())
+  usuarioId Int      // Dono da loja que vai receber
+  mensagem  String
+  lida      Boolean  @default(false)
+  createdAt DateTime @default(now())
+  link String?
+  
+  usuario   Usuario  @relation(fields: [usuarioId], references: [id])
 }

@@ -3,10 +3,11 @@ import { PrismaService } from '../database/prisma.service';
 import { CreateAvaliacaoLojaDto } from './dto/create-avaliacao-loja.dto';
 import { UpdateAvaliacaoLojaDto } from './dto/update-avaliacao-loja.dto';
 import { CreateComentarioAvaliacaoLojaDto } from './dto/create-comentario-avaliacao-loja.dto';
+import { NotificacaoService } from '../notificacao/notificacao.service';
 
 @Injectable()
 export class AvaliacaoLojaService {
-  constructor(private prisma: PrismaService) {}
+  constructor(private prisma: PrismaService, private notificacaoService: NotificacaoService) {}
 
   async listByLoja(lojaId: number, page = 1, pageSize = 10) {
     const skip = (page - 1) * pageSize;
@@ -41,6 +42,12 @@ export class AvaliacaoLojaService {
     const loja = await this.prisma.loja.findUnique({ where: { id: lojaId } });
     if (!loja) throw new NotFoundException(`Loja com ID ${lojaId} não encontrada.`);
     if (loja.usuarioId === userId) throw new ForbiddenException('Donos não podem avaliar a própria loja.');
+    const avaliador = await this.prisma.usuario.findUnique({
+      where: { id: userId },
+      select: { nome: true }
+    });
+
+    const nomeAvaliador = avaliador?.nome || 'Um usuário';
 
     // Garante 1 avaliação por usuário/loja (mensagem amigável)
     const jaExiste = await this.prisma.avaliacaoLoja.findUnique({
@@ -52,6 +59,12 @@ export class AvaliacaoLojaService {
     const created = await this.prisma.avaliacaoLoja.create({
       data: { lojaId, usuarioId: userId, conteudo: dto.conteudo, nota: notaDec },
     });
+
+    await this.notificacaoService.create(
+      loja.usuarioId, // Destinatário (Dono)
+      `${nomeAvaliador} avaliou sua loja "${loja.nome}" com nota ${notaDec}.`,
+      `/loja/${lojaId}?reviewId=${created.id}`
+    );
     return created;
   }
 
@@ -120,12 +133,38 @@ export class AvaliacaoLojaService {
   }
 
   async createComment(lojaId: number, avaliacaoId: number, userId: number, dto: CreateComentarioAvaliacaoLojaDto) {
-    const avaliacao = await this.prisma.avaliacaoLoja.findFirst({ where: { id: avaliacaoId, lojaId } });
+    const avaliacao = await this.prisma.avaliacaoLoja.findFirst({ where: { id: avaliacaoId, lojaId }, include: { 
+          loja: true,
+          usuario: true  
+        } });
     if (!avaliacao) throw new NotFoundException('Avaliação não encontrada.');
+
+    const comentarista = await this.prisma.usuario.findUnique({
+      where: { id: userId },
+      select: { nome: true }
+    });
+    const nomeComentarista = comentarista?.nome || 'Alguém';
+
     const created = await this.prisma.comentarioAvaliacaoLoja.create({
       data: { avaliacaoLojaId: avaliacaoId, usuarioId: userId, conteudo: dto.conteudo },
       include: { usuario: { select: { id: true, nome: true, userName: true, fotoPerfil: true } } },
     });
+
+    if (avaliacao.usuarioId !== userId) {
+       await this.notificacaoService.create(
+         avaliacao.usuarioId, // Manda para quem fez a avaliação
+         `${nomeComentarista} comentou na sua avaliação da loja "${avaliacao.loja.nome}".`,
+         `/loja/${lojaId}/review/${avaliacaoId}` 
+       );
+    }
+    
+    if (avaliacao.loja.usuarioId !== userId && avaliacao.usuarioId !== avaliacao.loja.usuarioId) {
+       await this.notificacaoService.create(
+         avaliacao.loja.usuarioId,
+         `Novo comentário em uma avaliação da sua loja "${avaliacao.loja.nome}".`,
+         `/loja/${lojaId}?reviewId=${avaliacaoId}`
+       );
+    }
     return created;
   }
 
