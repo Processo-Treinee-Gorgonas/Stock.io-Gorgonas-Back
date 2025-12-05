@@ -130,6 +130,13 @@ export class ProdutoController {
     return this.produtoService.ProcurarPorCategoria(slug, options);
   }
 
+  @Get('ver-mais/usuario/:id')
+  async ProcurarPorUsuario(
+    @Param('id', ParseIntPipe) id: number,
+  ) {
+    return this.produtoService.ProcurarPorUsuario(id);
+  }
+
   @Get('categoria/:slug')
   async PorCategoriaPage(
     @Param('slug') slug: string,

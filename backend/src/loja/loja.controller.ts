@@ -94,4 +94,11 @@ export class LojaController {
     await this.lojaService.delete(id, userId);
     // Não retorna nada no corpo da resposta
   }
+
+  @Get('usuario/:id')
+  async encontrarPorUsuario(
+    @Param('id', ParseIntPipe) id: number){
+      return this.lojaService.encontrarPorUsuario(id);
+  }
+
 }

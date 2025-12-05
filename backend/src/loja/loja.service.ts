@@ -150,4 +150,20 @@ export class LojaService {
             include: { categoria: true } // Inclui dados da categoria
         });
     }
+
+    async encontrarPorUsuario(id: number){
+      
+        return this.prisma.loja.findMany({
+            where: { usuarioId: id },
+            select: { 
+                id: true,
+                nome: true,
+                descricao: true,
+                logo: true,
+                categoria: { 
+                    select: { nome: true } 
+                },
+            }
+        });
+    }
 }

@@ -3,6 +3,7 @@ import { UsuarioService } from './usuario.service';
 import { CreateUsuarioDto } from './dto/create-usuario.dto';
 import { UpdateUsuarioDto } from './dto/update-usuario.dto';
 import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
+import { UpdateSenhaDto } from './dto/update-senha.dto';
 
 @Controller('usuario')
 export class UsuarioController {
@@ -24,12 +25,19 @@ export class UsuarioController {
     }
 
     @UseGuards(JwtAuthGuard)
+    @Patch('senha/:id')
+    updateSenha(
+        @Param('id', ParseIntPipe) id: number,
+        @Body() data: UpdateSenhaDto
+    ) {
+        return this.usuarioService.updateSenha(id, data);
+    }
+
     @Get()
     findAll() {
         return this.usuarioService.findAll();
     }
 
-    @UseGuards(JwtAuthGuard)
     @Get(':id')
     findOne(
         @Param('id', ParseIntPipe) id: number
@@ -43,6 +51,14 @@ export class UsuarioController {
         @Param('id', ParseIntPipe) id: number
     ) {
         return this.usuarioService.delete(id);
+    }
+
+
+    @Get('avaliacoes/:id')
+    listarAvaliacoes(
+        @Param('id', ParseIntPipe) id: number
+    ) {
+        return this.usuarioService.listarAvaliacoes(id);
     }
 
 }

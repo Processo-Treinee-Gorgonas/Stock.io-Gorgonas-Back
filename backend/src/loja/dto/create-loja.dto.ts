@@ -8,8 +8,8 @@ export class CreateLojaDto {
   nome: string;
 
   @IsString({ message: 'A descrição deve ser uma string' })
-  @IsNotEmpty({ message: 'A descrição é obrigatória' }) // Obrigatório conforme schema Prisma
-  descricao: string;
+  @IsOptional() // Agora é opcional conforme schema Prisma
+  descricao?: string;
 
   @IsInt({ message: 'O ID da categoria deve ser um número inteiro' })
   @IsNotEmpty({ message: 'O ID da categoria é obrigatório' })
