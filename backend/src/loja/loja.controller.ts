@@ -13,47 +13,102 @@ import {
   HttpCode,
   HttpStatus,
   Query,
+  UseInterceptors,
+  UploadedFile,
+  UploadedFiles,
 } from '@nestjs/common';
+import { FileInterceptor } from '@nestjs/platform-express';
+import { diskStorage } from 'multer';
+import { extname } from 'path';
 import { LojaService } from './loja.service';
 import { CreateLojaDto } from './dto/create-loja.dto';
 import { UpdateLojaDto } from './dto/update-loja.dto';
-import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard'; // Guardião que verifica o token JWT
+import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard'; 
 import { Loja } from '@prisma/client';
+import { FileFieldsInterceptor } from '@nestjs/platform-express';
 
-// Define a rota base para todas as operações deste controller como '/lojas'
+const multerConfig = {
+  storage: diskStorage({
+    destination: './uploads',
+    filename: (req, file, callback) => {
+      const uniqueSuffix = Date.now() + '-' + Math.round(Math.random() * 1e9);
+      const ext = extname(file.originalname);
+      const filename = `${file.fieldname}-${uniqueSuffix}${ext}`;
+      callback(null, filename);
+    },
+  }),
+};
 @Controller('lojas')
 export class LojaController {
   constructor(private readonly lojaService: LojaService) {}
 
-  // Rota para CRIAR uma nova loja (POST /lojas)
-  @UseGuards(JwtAuthGuard) // Só permite acesso se o usuário estiver logado (token JWT válido)
+  @UseGuards(JwtAuthGuard) 
   @Post()
-  @HttpCode(HttpStatus.CREATED) // Define o status HTTP de sucesso como 201
-  async create(@Body() data: CreateLojaDto, @Request() req): Promise<Loja> {
-    // O JwtAuthGuard anexa o payload decodificado do token a req.user
-    // O JwtStrategy foi configurado para retornar { userId: payload.sub, ... }
+  @HttpCode(HttpStatus.CREATED) 
+  @UseInterceptors(FileInterceptor('logo', multerConfig ))
+
+  async create(@Body() data: CreateLojaDto, @Request() req, @UploadedFile() file: Express.Multer.File): Promise<Loja> {
     const userId = req.user?.userId;
     // Verificação de segurança adicional
     if (typeof userId !== 'number') {
       throw new ForbiddenException('ID do usuário inválido ou não encontrado no token.');
     }
-    // Chama o serviço para criar a loja, passando os dados e o ID do dono
+    if (file) {
+      data.logo = file.path;
+    }
     return this.lojaService.create(data, userId);
   }
 
-  // Rota para ATUALIZAR uma loja existente (PATCH /lojas/:id)
   @UseGuards(JwtAuthGuard) // Só usuários logados
   @Patch(':id') // O :id na URL será capturado pelo @Param('id')
+  @UseInterceptors(
+    FileFieldsInterceptor(
+      [
+        { name: 'logo', maxCount: 1 },
+        { name: 'banner', maxCount: 1 },
+        { name: 'perfil', maxCount: 1 }, 
+      ],
+      multerConfig,
+    ),
+  )
   async update(
     @Param('id', ParseIntPipe) id: number, // Pega o 'id' da URL e converte para número
-    @Body() data: UpdateLojaDto,           // Pega os dados a atualizar do corpo da requisição
+    @Body() body: any,  
+    @UploadedFiles()
+    files: {
+      logo?: Express.Multer.File[];
+      banner?: Express.Multer.File[];
+      perfil?: Express.Multer.File[];
+    },       
     @Request() req,
   ): Promise<Loja> {
     const userId = req.user?.userId;
     if (typeof userId !== 'number') {
       throw new ForbiddenException('ID do usuário inválido ou não encontrado no token.');
     }
-    // Chama o serviço para atualizar, passando id da loja, dados e id do usuário (para verificar permissão)
+    const data: UpdateLojaDto = {};
+
+    if (body.nome) data.nome = body.nome;
+    if (body.descricao) data.descricao = body.descricao;
+    
+    if (body.categoriaId) {
+      data.categoriaId = Number(body.categoriaId);
+    }
+
+    if (body.removerLogo === 'true') data.logo = '/';
+    if (body.removerBanner === 'true') data.banner = '/';
+    if (body.removerPerfil === 'true') data.sticker = '/';
+
+    if (files?.logo?.[0]) {
+      data.logo = files.logo[0].path;
+    }
+
+    if (files?.banner?.[0]) {
+      data.banner = files.banner[0].path;
+    }
+    if (files?.perfil?.[0]) {
+      data.sticker = files.perfil[0].path; 
+    }
     return this.lojaService.update(id, data, userId);
   }
 
