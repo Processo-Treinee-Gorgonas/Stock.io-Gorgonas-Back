@@ -101,7 +101,7 @@ model AvaliacaoLoja {
   id Int @id @default(autoincrement())
   usuarioId Int
   lojaId Int
-  nota Int
+  nota Decimal @db.Decimal(3, 1)
   conteudo String @db.Text
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
