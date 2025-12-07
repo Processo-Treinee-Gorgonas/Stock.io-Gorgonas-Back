@@ -1,59 +1,113 @@
 // src/auth/auth.service.ts
-import { Injectable, UnauthorizedException } from '@nestjs/common';
+import {
+  Injectable,
+  UnauthorizedException,
+  NotFoundException,
+  BadRequestException,
+} from '@nestjs/common';
 import { UsuarioService } from '../usuario/usuario.service';
 import { JwtService } from '@nestjs/jwt';
 import * as bcrypt from 'bcrypt';
+import { randomBytes } from 'crypto';
+import { addHours } from 'date-fns';
+import { EmailService } from '../email/email.service';
 
 @Injectable()
 export class AuthService {
   constructor(
-    // Injeta o serviço que fala com a tabela 'Usuario'
-    private usuarioService: UsuarioService, 
-    // Injeta o serviço que "assina" e cria o JWT
+    private usuarioService: UsuarioService,
     private jwtService: JwtService,
+    private emailService: EmailService,
   ) {}
 
-  /**
-   * Esta é a função que o 'LocalStrategy' chama.
-   * Ela é o "cérebro" da validação.
-   */
+  // LOGIN
+
   async validateUser(email: string, pass: string): Promise<any> {
     let usuario;
+
     try {
-      // 1. Busca o usuário no banco (com a senhaHash!)
-      //    (O 'findOneByEmail' é uma função que você já tem no seu UsuarioService)
-      usuario = await this.usuarioService.findOneByEmail(email); 
+      usuario = await this.usuarioService.findOneByEmail(email);
     } catch (error) {
-      // Se 'findOneByEmail' falhar (ex: NotFound), as credenciais são inválidas
       throw new UnauthorizedException('E-mail ou senha inválidos.');
     }
 
-    // 2. Compara a senha enviada (pass) com o hash salvo no banco (usuario.senhaHash)
     if (usuario && (await bcrypt.compare(pass, usuario.senhaHash))) {
-      const { senhaHash, ...result } = usuario; // 3. Remove o hash da resposta
-      return result; // 4. Retorna o objeto do usuário (sem o hash)
+      const { senhaHash, ...result } = usuario;
+      return result;
     }
 
-    // 5. Se a senha não bater, retorna nulo (a LocalStrategy vai tratar)
     return null;
   }
 
-  /**
-   * Esta função é chamada pelo 'AuthController' DEPOIS que o
-   * usuário foi validado com sucesso.
-   * Ela cria o Token JWT.
-   */
   async login(usuario: any) {
-    // O 'usuario' que recebemos aqui é o 'result' da função 'validateUser'
-    const payload = { 
-      email: usuario.email, 
-      sub: usuario.id, // 'sub' (subject) é o nome padrão para o ID do usuário no JWT
+    const payload = {
+      email: usuario.email,
+      sub: usuario.id,
       nome: usuario.nome,
     };
-    
-    // "Assina" o payload com o seu JWT_SECRET e retorna o token
+
     return {
       access_token: this.jwtService.sign(payload),
     };
+  }
+
+
+  // 1. ENVIAR E-MAIL DE RECUPERAÇÃO
+
+  async forgotPassword(email: string): Promise<void> {
+    const usuario = await this.usuarioService.findOneByEmail(email);
+
+    if (!usuario) {
+      throw new NotFoundException('E-mail não encontrado.');
+    }
+
+    // Gera token seguro
+    const token = randomBytes(32).toString('hex');
+
+    // Expira em 1 hora
+    const expires = addHours(new Date(), 1);
+
+    // Salva no banco (nomes EXATAMENTE iguais ao Prisma)
+    await this.usuarioService.update(usuario.id, {
+      resetPasswordToken: token,
+      resetPasswordExpiration: expires,
+    });
+
+    const resetLink = `http://localhost:3000/redefinir-senha?token=${token}`;
+
+    // ENVIA O EMAIL REAL
+    await this.emailService.sendMail({
+      to: usuario.email,
+      subject: 'Recuperação de senha - Stock.io',
+      html: `
+        <p>Olá, ${usuario.nome}!</p>
+        <p>Clique no link abaixo para redefinir sua senha:</p>
+        <p><a href="${resetLink}">Redefinir Senha</a></p>
+        <p>O link expira em 1 hora.</p>
+      `,
+    });
+  }
+
+  // 2. REDEFINIR SENHA VIA TOKEN
+
+  async resetPassword(token: string, novaSenha: string): Promise<void> {
+    const usuario = await this.usuarioService.findByResetToken(token);
+
+    if (!usuario) {
+      throw new BadRequestException('Token inválido.');
+    }
+
+    if (!usuario.resetPasswordExpiration || usuario.resetPasswordExpiration < new Date()) {
+      throw new BadRequestException('Token expirado.');
+    }
+
+    const newHash = await bcrypt.hash(novaSenha, 10);
+
+    // Atualiza a senha e apaga o token
+    await this.usuarioService.update(usuario.id, {
+      senhaHash: newHash,
+      resetPasswordToken: null,
+      resetPasswordExpiration: null,
+    });
   }
 }

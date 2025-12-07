@@ -4,6 +4,8 @@ import { AuthService } from './auth.service';
 import { UsuarioService } from '../usuario/usuario.service';
 import { CreateUsuarioDto } from '../usuario/dto/create-usuario.dto';
 import { LoginDto } from './dto/login.dto';
+import { ForgotPasswordDto } from './dto/forgot-password.dto';
+import { ResetPasswordDto } from './dto/reset-password.dto';
 
 // 1. Importa a NOSSA guarda customizada (a "cura")
 import { LocalAuthGuard } from './guards/local-auth.guard'; 
@@ -38,5 +40,19 @@ export class AuthController {
     // Esta rota é pública e apenas repassa os dados
     // para o UsuarioService (que faz o hashing, etc.)
     return this.usuarioService.create(createUserDto);
+  }
+
+  @Post('forgot-password')
+  async forgotPassword(@Body() forgotPasswordDto: ForgotPasswordDto) {
+    const { email } = forgotPasswordDto;
+    await this.authService.forgotPassword(email);
+    return { message: 'Solicitação enviada com sucesso.' };
+  }
+
+  @Post('reset-password')
+  async resetPassword(@Body() resetPasswordDto: ResetPasswordDto) {
+    const { token, novaSenha } = resetPasswordDto;
+    await this.authService.resetPassword(token, novaSenha);
+    return { message: 'Senha alterada com sucesso.' };
   }
 }

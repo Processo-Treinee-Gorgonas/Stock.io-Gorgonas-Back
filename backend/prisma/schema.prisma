@@ -17,6 +17,11 @@ model Usuario {
   nome String @db.VarChar(255)
   email String @db.VarChar(255) @unique
   senhaHash String @db.VarChar(255)
+
+  resetPasswordToken       String?   @db.VarChar(255)
+  resetPasswordExpiration  DateTime?
+
+
   fotoPerfil String?
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
@@ -25,6 +30,9 @@ model Usuario {
   comentariosAvaliacaoLoja ComentarioAvaliacaoLoja []
   avaliacoesProduto AvaliacaoProduto[]
   comentariosAvaliacaoProduto ComentarioAvaliacaoProduto []
+
+
+
 }
 
 model Loja {

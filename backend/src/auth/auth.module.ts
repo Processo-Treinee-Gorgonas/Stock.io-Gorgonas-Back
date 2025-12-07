@@ -7,38 +7,43 @@ import { PassportModule } from '@nestjs/passport';
 import { JwtModule } from '@nestjs/jwt';
 import { ConfigModule, ConfigService } from '@nestjs/config';
 
-// Importa todas as nossas ferramentas customizadas
+// Importações customizadas
 import { LocalStrategy } from './strategies/local.strategy';
 import { JwtStrategy } from './strategies/jwt.strategy';
 import { JwtAuthGuard } from './guards/jwt-auth.guard';
 import { LocalAuthGuard } from './guards/local-auth.guard';
 
+//  módulo do e-mail
+import { EmailModule } from '../email/email.module';
+
 @Module({
   imports: [
-    UsuarioModule, // Para o AuthService poder usar o UsuarioService
+    ConfigModule,
+    UsuarioModule,
+    EmailModule,
 
-    // 1. A PRIMEIRA DEFESA: Diz ao Passport para NÃO usar sessões
-    PassportModule.register({ session: false }), 
-    
-    // Configura a criação de Tokens (JWT)
+    PassportModule.register({ session: false }),
+
     JwtModule.registerAsync({
-      imports: [ConfigModule], // Lê as variáveis de ambiente
+      imports: [ConfigModule],
       inject: [ConfigService],
       useFactory: (configService: ConfigService) => ({
         secret: configService.get<string>('JWT_SECRET'),
-        signOptions: { expiresIn: '12h' }, // Tokens expiram em 12 horas
+        signOptions: { expiresIn: '12h' },
       }),
     }),
   ],
-  controllers: [AuthController], // O "porteiro"
-  
-  // 2. O REGISTRO: Lista todas as "ferramentas" do módulo
+
+  controllers: [AuthController],
+
   providers: [
-    AuthService,     // O "cérebro"
-    LocalStrategy,   // O "validador de login"
-    JwtStrategy,     // O "leitor de crachá"
-    LocalAuthGuard,  // A "cura" (guarda de login customizada)
-    JwtAuthGuard,    // A guarda de rotas protegidas
+    AuthService,
+    LocalStrategy,
+    JwtStrategy,
+    LocalAuthGuard,
+    JwtAuthGuard,
   ],
+
+  exports: [AuthService],
 })
 export class AuthModule {}
